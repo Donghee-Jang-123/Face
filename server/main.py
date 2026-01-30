@@ -1,12 +1,45 @@
 import uvicorn
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
 from app.core import models
-from app.api import routes
+from app.api import auth_routes, acting_routes
 
-app = FastAPI()
 
-# ⚠️ CORS 설정: 프론트엔드(Next.js)와의 연결을 허용합니다.
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """서버 시작/종료 시 실행되는 이벤트 핸들러"""
+    # Startup: 모델 로드
+    print("🚀 서버 시작 중...")
+    
+    # 1. 얼굴 인식 모델 (InsightFace)
+    models.load_models()
+    
+    # 2. 연기 분석 모델 (lazy loading - 첫 요청 시 로드)
+    # audio_service와 video_service는 필요할 때 로드됩니다.
+    
+    # 3. 필요한 폴더 생성
+    os.makedirs("temp", exist_ok=True)
+    os.makedirs("assets", exist_ok=True)
+    
+    print("✅ 서버 준비 완료!")
+    
+    yield
+    
+    # Shutdown
+    print("👋 서버 종료 중...")
+
+
+app = FastAPI(
+    title="Face Recognition & Acting Analysis API",
+    description="얼굴 인식 회원가입/로그인 + 연기 분석 서비스",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS 설정: 프론트엔드(Next.js)와의 연결을 허용합니다.
 origins = [
     "http://localhost:3000",
 ]
@@ -19,14 +52,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 서버 시작 시 모델 로드 (Step 1 실행)
-@app.on_event("startup")
-def startup_event():
-    models.load_models()
+# API 라우터 등록
+app.include_router(auth_routes.router)      # /register, /login
+app.include_router(acting_routes.router)    # /analyze/acting
 
-# API 경로 연결 (Step 3 연결: /register, /login 등)
-app.include_router(routes.router)
+
+@app.get("/")
+async def root():
+    """API 상태 확인용 엔드포인트"""
+    return {
+        "status": "running",
+        "message": "Face Recognition & Acting Analysis API",
+        "endpoints": {
+            "auth": ["/register", "/login"],
+            "acting": ["/analyze/acting"]
+        }
+    }
+
 
 if __name__ == "__main__":
-    # "main:app"에서 main은 파일 이름(main.py)을 의미합니다.
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
