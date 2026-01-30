@@ -1,14 +1,14 @@
-# backend/main.py
-
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core import models
+from app.api import routes
 
 app = FastAPI()
 
-# ⚠️ CORS 설정 (이게 없으면 프론트에서 에러 남!)
+# ⚠️ CORS 설정: 프론트엔드(Next.js)와의 연결을 허용합니다.
 origins = [
-    "http://localhost:3000",  # Next.js 주소
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -19,16 +19,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. 헬스 체크용 (서버 살아있나 확인)
-@app.get("/")
-def read_root():
-    return {"message": "FastAPI 서버가 정상 작동 중입니다! 🚀"}
+# 서버 시작 시 모델 로드 (Step 1 실행)
+@app.on_event("startup")
+def startup_event():
+    models.load_models()
 
-# 2. 이미지 업로드 테스트용
-@app.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
-    return {"filename": file.filename, "status": "이미지 받기 성공!"}
+# API 경로 연결 (Step 3 연결: /register, /login 등)
+app.include_router(routes.router)
 
 if __name__ == "__main__":
-    # 0.0.0.0은 외부 접속 허용, 로컬에서는 127.0.0.1과 같음
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # "main:app"에서 main은 파일 이름(main.py)을 의미합니다.
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
