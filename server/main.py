@@ -2,6 +2,7 @@ import uvicorn
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from app.core import models
@@ -42,6 +43,7 @@ app = FastAPI(
 # CORS 설정: 프론트엔드(Next.js)와의 연결을 허용합니다.
 origins = [
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
@@ -55,6 +57,9 @@ app.add_middleware(
 # API 라우터 등록
 app.include_router(auth_routes.router)      # /register, /login
 app.include_router(acting_routes.router)    # /analyze/acting
+
+# 정적 파일 서빙 (assets 폴더)
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 
 @app.get("/")
