@@ -162,6 +162,10 @@ export default function ActingPage() {
       // FormData 생성
       const formData = new FormData();
       formData.append('file', blob, 'my_acting.webm');
+      
+      // 타겟 영상 파일명 추가 (referenceVideoUrl에서 파일명 추출)
+      const targetFilename = referenceVideoUrl.split('/').pop() || '어이가 없네.mp4';
+      formData.append('target_filename', targetFilename);
 
       // 백엔드로 전송
       const response = await fetch('http://127.0.0.1:8000/analyze/acting', {
@@ -170,25 +174,26 @@ export default function ActingPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('업로드 성공:', data);
       setUploadResult({ 
         success: true, 
-        message: `분석 완료! ${JSON.stringify(data)}` 
+        message: `분석 완료! 점수: ${data.score}점, 싱크로율: ${data.sync_rate}%` 
       });
     } catch (error) {
       console.error('업로드 실패:', error);
       setUploadResult({ 
         success: false, 
-        message: '업로드 실패. 서버 연결을 확인해주세요.' 
+        message: `업로드 실패: ${error instanceof Error ? error.message : '서버 연결을 확인해주세요.'}` 
       });
     } finally {
       setIsUploading(false);
     }
-  }, [recordedChunks]);
+  }, [recordedChunks, referenceVideoUrl]);
 
   // 에러 메시지 렌더링 함수
   const renderCameraError = () => {

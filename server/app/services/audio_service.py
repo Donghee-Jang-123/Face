@@ -5,7 +5,6 @@ import numpy as np
 import scipy.signal
 import os
 from transformers import Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor
-# .editor를 지우고 아래처럼 길게 써주셔야 합니다!
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 class AudioService:
