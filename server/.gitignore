@@ -10,3 +10,5 @@ env/
 # 환경 변수 (비밀번호 등)
 .env
 .venv/
+
+database/
