@@ -18,12 +18,20 @@ async def lifespan(app: FastAPI):
     # 1. 얼굴 인식 모델 (InsightFace)
     models.load_models()
     
-    # 2. 연기 분석 모델 (lazy loading - 첫 요청 시 로드)
-    # audio_service와 video_service는 필요할 때 로드됩니다.
-    
-    # 3. 필요한 폴더 생성
+    # 2. 필요한 폴더 생성
     os.makedirs("temp", exist_ok=True)
     os.makedirs("assets", exist_ok=True)
+    os.makedirs("data/references", exist_ok=True)
+    
+    # 3. Assets 폴더 자동 동기화 (새 MP4만 분석)
+    print("\n📂 Assets 폴더 동기화 중...")
+    try:
+        from app.services.acting_analysis_pipeline import get_acting_pipeline
+        pipeline = get_acting_pipeline()
+        pipeline.sync_assets()
+    except Exception as e:
+        print(f"⚠️  Assets 동기화 중 오류 발생: {e}")
+        print("   서버는 계속 실행되지만, 일부 레퍼런스가 누락될 수 있습니다.")
     
     print("✅ 서버 준비 완료!")
     
@@ -70,7 +78,20 @@ async def root():
         "message": "Face Recognition & Acting Analysis API",
         "endpoints": {
             "auth": ["/register", "/login"],
-            "acting": ["/analyze/acting"]
+            "acting": [
+                "POST /analyze/acting - 연기 평가",
+                "POST /analyze/acting/quick - 빠른 평가 (오디오만)",
+            ],
+            "reference": [
+                "POST /analyze/reference/prepare - 레퍼런스 등록",
+                "GET /analyze/reference/list - 분석 완료된 레퍼런스 목록",
+                "GET /analyze/reference/{actor_id} - 레퍼런스 상세",
+            ],
+            "assets": [
+                "GET /analyze/assets/list - 모든 비디오 및 분석 상태",
+                "GET /analyze/assets/pending - 미분석 비디오 목록",
+                "POST /analyze/assets/sync - 새 비디오 자동 분석",
+            ]
         }
     }
 
