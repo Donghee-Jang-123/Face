@@ -35,3 +35,9 @@ async def get_actor_videos(actor_id: str):
         raise HTTPException(status_code=404, detail="해당 배우의 영상을 찾을 수 없습니다.")
     
     return filtered_videos
+
+@router.get("/recommend/videos")
+async def get_all_videos():
+    """저장된 모든 연기 영상을 반환합니다 (유튜브 스타일 리스트용)"""
+    videos = load_json_data(VIDEOS_FILE)
+    return videos

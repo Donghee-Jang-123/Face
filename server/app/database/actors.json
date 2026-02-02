@@ -16,5 +16,35 @@
     "name": "유아인",
     "thumbnail": "/assets/actors/유아인.png",
     "description": "독보적인 개성과 폭발적인 감정 스펙트럼"
+  },
+  {
+    "actor_id": "actor_04",
+    "name": "고윤정",
+    "thumbnail": "/assets/actors/고윤정.png",
+    "description": "신비로운 분위기와 청순한 마스크"
+  },
+  {
+    "actor_id": "actor_05",
+    "name": "김고은",
+    "thumbnail": "/assets/actors/김고은.png",
+    "description": "자연스러운 생활 연기와 깊은 감성"
+  },
+  {
+    "actor_id": "actor_06",
+    "name": "김지원",
+    "thumbnail": "/assets/actors/김지원.png",
+    "description": "정확한 딕션과 넓은 연기 스펙트럼"
+  },
+  {
+    "actor_id": "actor_07",
+    "name": "송혜교",
+    "thumbnail": "/assets/actors/송혜교.png",
+    "description": "우아함 속에 감춰진 단단한 내면 연기"
+  },
+  {
+    "actor_id": "actor_08",
+    "name": "김히어라",
+    "thumbnail": "/assets/actors/김히어라.png",
+    "description": "뮤지컬로 다져진 탄탄한 발성과 카리스마"
   }
 ]

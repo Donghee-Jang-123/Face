@@ -15,6 +15,7 @@ interface AuthResponse {
   message: string;
   nickname?: string;
   score?: number;
+  recommended_actor_id?: string;
 }
 
 export default function Home() {
@@ -243,13 +244,14 @@ export default function Home() {
         // 토큰 및 사용자 정보 저장
         localStorage.setItem('user', JSON.stringify({
           nickname: data.nickname,
+          recommended_actor_id: data.recommended_actor_id,
           loginTime: new Date().toISOString(),
         }));
 
         // 잠시 후 acting 페이지로 이동
         setTimeout(() => {
           stopCamera();
-          router.push('/acting');
+          router.push('/recommend');
         }, 1500);
       } else {
         setErrorMessage(data.message);
