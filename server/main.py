@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from app.core import models
 from app.api import auth_routes, acting_routes
-
+from app.api.recommend_routes import router as recommend_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -57,6 +57,7 @@ app.add_middleware(
 # API 라우터 등록
 app.include_router(auth_routes.router)      # /register, /login
 app.include_router(acting_routes.router)    # /analyze/acting
+app.include_router(recommend_router, prefix="/api", tags=["recommend"])
 
 # 정적 파일 서빙 (assets 폴더)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
