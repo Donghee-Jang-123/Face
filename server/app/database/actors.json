@@ -1,0 +1,20 @@
+[
+  {
+    "actor_id": "actor_01",
+    "name": "한소희",
+    "thumbnail": "/assets/actors/한소희.png",
+    "description": "세련되고 강렬한 연기"
+  },
+  {
+    "actor_id": "actor_02",
+    "name": "송강",
+    "thumbnail": "/assets/actors/송강.png",
+    "description": "섬세한 감정 표현"
+  },
+  {
+    "actor_id": "actor_03",
+    "name": "유아인",
+    "thumbnail": "/assets/actors/유아인.png",
+    "description": "독보적인 개성과 폭발적인 감정 스펙트럼"
+  }
+]

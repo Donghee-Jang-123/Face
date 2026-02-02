@@ -42,10 +42,12 @@ async def login(file: UploadFile = File(...)):
     result = vector_store.search_user(embedding)
     
     if result["found"]:
+        recommended_actor_id = vector_store.search_similar_actor(embedding)
         return {
             "success": True, 
             "nickname": result["nickname"], 
             "score": result["score"],
+            "recommended_actor_id": recommended_actor_id,
             "message": f"{result['nickname']}님 환영합니다!"
         }
     else:

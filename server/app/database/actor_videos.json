@@ -1,0 +1,23 @@
+[
+  {
+    "video_id": "v_001",
+    "actor_id": "actor_01",
+    "title": "부부의 세계 - 식사 장면",
+    "video_url": "/assets/videos/v_001.mp4",
+    "script_path": "/assets/scripts/v_001.json"
+  },
+  {
+    "video_id": "v_002",
+    "actor_id": "actor_02",
+    "title": "알고있지만 - 나비 장면",
+    "video_url": "/assets/videos/v_003.mp4",
+    "script_path": "/assets/scripts/v_003.json"
+  },
+  {
+    "video_id": "v_003",
+    "actor_id": "actor_03",
+    "title": "베테랑 - 조태오 '어이가 없네' 장면",
+    "video_url": "/assets/videos/어이가 없네.mp4",
+    "script_path": "/assets/scripts/v_004.json"
+  }
+]
