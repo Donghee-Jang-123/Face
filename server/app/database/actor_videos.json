@@ -1,23 +1,44 @@
 [
   {
     "video_id": "v_001",
-    "actor_id": "actor_01",
-    "title": "부부의 세계 - 식사 장면",
-    "video_url": "/assets/videos/v_001.mp4",
+    "actor_id": "이정재",
+    "title": "관상 - 만남 장면",
+    "video_url": "/assets/videos/내가왕이될상인가.mp4",
     "script_path": "/assets/scripts/v_001.json"
   },
   {
     "video_id": "v_002",
-    "actor_id": "actor_02",
-    "title": "알고있지만 - 나비 장면",
-    "video_url": "/assets/videos/v_003.mp4",
+    "actor_id": "김고은",
+    "title": "도깨비 - 고백 장면",
+    "video_url": "/assets/videos/사랑해요.mp4",
     "script_path": "/assets/scripts/v_003.json"
   },
   {
     "video_id": "v_003",
-    "actor_id": "actor_03",
-    "title": "베테랑 - 조태오 '어이가 없네' 장면",
-    "video_url": "/assets/videos/어이가 없네.mp4",
+    "actor_id": "황정민",
+    "title": "서울의 봄",
+    "video_url": "/assets/videos/실패하면반역.mp4",
+    "script_path": "/assets/scripts/v_004.json"
+  },
+  {
+    "video_id": "v_004",
+    "actor_id": "유아인",
+    "title": "베테랑",
+    "video_url": "/assets/videos/어이가없네.mp4",
+    "script_path": "/assets/scripts/v_004.json"
+  },
+  {
+    "video_id": "v_005",
+    "actor_id": "송강호",
+    "title": "변호인",
+    "video_url": "/assets/videos/압니다너무잘알지요.mp4",
+    "script_path": "/assets/scripts/v_004.json"
+  },
+  {
+    "video_id": "v_006",
+    "actor_id": "박소담",
+    "title": "기생충",
+    "video_url": "/assets/videos/제시카외동딸.mp4",
     "script_path": "/assets/scripts/v_004.json"
   }
 ]

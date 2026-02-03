@@ -96,6 +96,15 @@ class ScoringService:
     EXPRESSION_BROWS_WEIGHT = 0.40  # 눈썹 (감정 표현)
 
     # =========================================================================
+    # 점수 엄격도 (오디오/비디오를 더 깐깐히 평가)
+    # =========================================================================
+    # 유사도/상관계수를 더 엄격하게 변환하는 지수 (1.0보다 클수록 엄격)
+    SIMILARITY_POWER = 1.35
+    CORRELATION_POWER = 1.40
+    # 레인지 비율이 1에서 벗어날 때 페널티 크기 (클수록 엄격)
+    RANGE_PENALTY_MULT = 140.0
+
+    # =========================================================================
     # 블렌드쉐입 그룹 정의 (얼굴 영역별)
     # =========================================================================
     
@@ -302,7 +311,7 @@ class ScoringService:
 
         # 코사인 유사도 계산
         pattern_similarity = self._cosine_similarity(user_norm, ref_norm)
-        pattern_score = max(0.0, min(100.0, pattern_similarity * 100))
+        pattern_score = self._similarity_to_score(pattern_similarity)
 
         # =====================================================================
         # 서브메트릭 2: Dynamic Range (30%)
@@ -313,12 +322,10 @@ class ScoringService:
         # 배우 대비 사용자의 다이내믹 레인지 비율
         if ref_std > 1e-8:
             range_ratio = user_std / ref_std
-            # 비율이 1에 가까울수록 좋음, 너무 작으면 단조로움
-            if range_ratio >= 1.0:
-                range_score = 100.0
-            else:
-                range_score = min(100.0, range_ratio * 100)
+            deviation = abs(1.0 - range_ratio)
+            range_score = max(0.0, 100.0 - deviation * self.RANGE_PENALTY_MULT)
         else:
+            range_ratio = 1.0
             range_score = 100.0  # 레퍼런스도 변화가 없으면 만점
 
         # =====================================================================
@@ -416,7 +423,7 @@ class ScoringService:
             correlation = 0.0
 
         # 0-100 점수로 변환 (상관계수 -1~1 → 0~100)
-        pattern_score = max(0.0, min(100.0, (correlation + 1) * 50))
+        pattern_score = self._correlation_to_score(correlation)
 
         # =====================================================================
         # 서브메트릭 2: Intensity (30%)
@@ -427,11 +434,10 @@ class ScoringService:
         # 배우 대비 사용자의 다이내믹 레인지 비율
         if ref_range > 1e-8:
             intensity_ratio = user_range / ref_range
-            if intensity_ratio >= 1.0:
-                intensity_score = 100.0
-            else:
-                intensity_score = min(100.0, intensity_ratio * 100)
+            deviation = abs(1.0 - intensity_ratio)
+            intensity_score = max(0.0, 100.0 - deviation * self.RANGE_PENALTY_MULT)
         else:
+            intensity_ratio = 1.0
             intensity_score = 100.0
 
         # =====================================================================
@@ -648,7 +654,8 @@ class ScoringService:
         user_arr = np.array(user_values)
         ref_arr = np.array(ref_values)
         
-        return self._cosine_similarity(user_arr, ref_arr)
+        similarity = self._cosine_similarity(user_arr, ref_arr)
+        return self._similarity_to_unit(similarity)
 
     # =========================================================================
     # 유틸리티 함수
@@ -703,6 +710,23 @@ class ScoringService:
         similarity = np.dot(a, b) / (norm_a * norm_b)
         # -1~1 → 0~1 변환
         return (similarity + 1) / 2
+
+    @classmethod
+    def _similarity_to_unit(cls, similarity: float) -> float:
+        """유사도를 더 엄격하게 0~1로 변환."""
+        similarity = max(0.0, min(1.0, similarity))
+        return similarity ** cls.SIMILARITY_POWER
+
+    @classmethod
+    def _similarity_to_score(cls, similarity: float) -> float:
+        """유사도(0~1)를 엄격 점수(0~100)로 변환."""
+        return cls._similarity_to_unit(similarity) * 100.0
+
+    @classmethod
+    def _correlation_to_score(cls, correlation: float) -> float:
+        """상관계수를 엄격 점수(0~100)로 변환."""
+        correlation = max(0.0, min(1.0, correlation))
+        return (correlation ** cls.CORRELATION_POWER) * 100.0
 
     @staticmethod
     def _get_grade(score: float) -> ScoreGrade:
