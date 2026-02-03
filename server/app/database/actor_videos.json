@@ -4,41 +4,465 @@
     "actor_id": "이정재",
     "title": "관상 - 만남 장면",
     "video_url": "/assets/videos/내가왕이될상인가.mp4",
-    "script_path": "/assets/scripts/v_001.json"
+    "sentences": [
+      {
+        "text": "어서 말해보게",
+        "start": 0.75,
+        "end": 1.977,
+        "words": [
+          {
+            "text": "어서",
+            "start": 0.75,
+            "end": 1.363
+          },
+          {
+            "text": "말해보게",
+            "start": 1.363,
+            "end": 1.977
+          }
+        ]
+      },
+      {
+        "text": "내가 왕이 될 상인가말이야",
+        "start": 1.977,
+        "end": 4.43,
+        "words": [
+          {
+            "text": "내가",
+            "start": 1.977,
+            "end": 2.59
+          },
+          {
+            "text": "왕이",
+            "start": 2.59,
+            "end": 3.203
+          },
+          {
+            "text": "될",
+            "start": 3.203,
+            "end": 3.817
+          },
+          {
+            "text": "상인가말이야",
+            "start": 3.817,
+            "end": 4.43
+          }
+        ]
+      }
+    ]
   },
   {
     "video_id": "v_002",
     "actor_id": "김고은",
     "title": "도깨비 - 고백 장면",
     "video_url": "/assets/videos/사랑해요.mp4",
-    "script_path": "/assets/scripts/v_003.json"
+    "sentences": [
+      {
+        "text": "사랑해요",
+        "start": 0.71,
+        "end": 1.27,
+        "words": [
+          {
+            "text": "사랑해요",
+            "start": 0.71,
+            "end": 1.27
+          }
+        ]
+      }
+    ]
   },
   {
     "video_id": "v_003",
     "actor_id": "황정민",
     "title": "서울의 봄",
     "video_url": "/assets/videos/실패하면반역.mp4",
-    "script_path": "/assets/scripts/v_004.json"
+    "sentences": [
+      {
+        "text": "실패하면 반역",
+        "start": 0.0,
+        "end": 1.99,
+        "words": [
+          {
+            "text": "실패하면",
+            "start": 0.0,
+            "end": 0.995
+          },
+          {
+            "text": "반역",
+            "start": 0.995,
+            "end": 1.99
+          }
+        ]
+      },
+      {
+        "text": "성공하면 혁명아닙니까",
+        "start": 1.99,
+        "end": 3.98,
+        "words": [
+          {
+            "text": "성공하면",
+            "start": 1.99,
+            "end": 2.985
+          },
+          {
+            "text": "혁명아닙니까",
+            "start": 2.985,
+            "end": 3.98
+          }
+        ]
+      }
+    ]
   },
   {
     "video_id": "v_004",
     "actor_id": "유아인",
     "title": "베테랑",
     "video_url": "/assets/videos/어이가없네.mp4",
-    "script_path": "/assets/scripts/v_004.json"
+    "sentences": [
+      {
+        "text": "지금 내 기분이 그래",
+        "start": 0.73,
+        "end": 1.79,
+        "words": [
+          {
+            "text": "지금",
+            "start": 0.73,
+            "end": 0.97
+          },
+          {
+            "text": "내",
+            "start": 0.97,
+            "end": 1.11
+          },
+          {
+            "text": "기분이",
+            "start": 1.11,
+            "end": 1.55
+          },
+          {
+            "text": "그래",
+            "start": 1.55,
+            "end": 1.79
+          }
+        ]
+      },
+      {
+        "text": "어이가 없네",
+        "start": 1.79,
+        "end": 5.57,
+        "words": [
+          {
+            "text": "어이가",
+            "start": 1.79,
+            "end": 2.83
+          },
+          {
+            "text": "없네",
+            "start": 5.17,
+            "end": 5.57
+          }
+        ]
+      }
+    ]
   },
   {
     "video_id": "v_005",
     "actor_id": "송강호",
     "title": "변호인",
     "video_url": "/assets/videos/압니다너무잘알지요.mp4",
-    "script_path": "/assets/scripts/v_004.json"
+    "sentences": [
+      {
+        "text": "압니다 너무 잘 알지요",
+        "start": 0.88,
+        "end": 3.54,
+        "words": [
+          {
+            "text": "압니다",
+            "start": 0.88,
+            "end": 1.28
+          },
+          {
+            "text": "너무",
+            "start": 1.28,
+            "end": 2.74
+          },
+          {
+            "text": "잘",
+            "start": 2.74,
+            "end": 3.0
+          },
+          {
+            "text": "알지요",
+            "start": 3.0,
+            "end": 3.54
+          }
+        ]
+      },
+      {
+        "text": "대한민국 헌법 제1조 2항",
+        "start": 4.3,
+        "end": 6.83,
+        "words": [
+          {
+            "text": "대한민국",
+            "start": 4.3,
+            "end": 5.33
+          },
+          {
+            "text": "헌법",
+            "start": 5.33,
+            "end": 5.69
+          },
+          {
+            "text": "제1조",
+            "start": 5.69,
+            "end": 6.39
+          },
+          {
+            "text": "2항",
+            "start": 6.39,
+            "end": 6.83
+          }
+        ]
+      },
+      {
+        "text": "대한민국 주권은 국민에 있고",
+        "start": 8.4,
+        "end": 10.61,
+        "words": [
+          {
+            "text": "대한민국",
+            "start": 8.4,
+            "end": 9.41
+          },
+          {
+            "text": "주권은",
+            "start": 9.41,
+            "end": 9.91
+          },
+          {
+            "text": "국민에",
+            "start": 9.91,
+            "end": 10.33
+          },
+          {
+            "text": "있고",
+            "start": 10.33,
+            "end": 10.61
+          }
+        ]
+      },
+      {
+        "text": "모든 권력은 국민으로부터 나온다",
+        "start": 11.85,
+        "end": 14.46,
+        "words": [
+          {
+            "text": "모든",
+            "start": 11.85,
+            "end": 12.7
+          },
+          {
+            "text": "권력은",
+            "start": 12.7,
+            "end": 13.34
+          },
+          {
+            "text": "국민으로부터",
+            "start": 13.34,
+            "end": 14.02
+          },
+          {
+            "text": "나온다",
+            "start": 14.02,
+            "end": 14.46
+          }
+        ]
+      },
+      {
+        "text": "국가란 국민입니다",
+        "start": 14.46,
+        "end": 16.34,
+        "words": [
+          {
+            "text": "국가란",
+            "start": 14.46,
+            "end": 15.62
+          },
+          {
+            "text": "국민입니다",
+            "start": 15.62,
+            "end": 16.34
+          }
+        ]
+      },
+      {
+        "text": "그런데 증인이야말로",
+        "start": 16.34,
+        "end": 18.14,
+        "words": [
+          {
+            "text": "그런데",
+            "start": 16.34,
+            "end": 17.36
+          },
+          {
+            "text": "증인이야말로",
+            "start": 17.36,
+            "end": 18.14
+          }
+        ]
+      },
+      {
+        "text": "그 국가를 아무런 법적 근거도 없이",
+        "start": 18.14,
+        "end": 20.7,
+        "words": [
+          {
+            "text": "그",
+            "start": 18.14,
+            "end": 18.72
+          },
+          {
+            "text": "국가를",
+            "start": 18.72,
+            "end": 19.28
+          },
+          {
+            "text": "아무런",
+            "start": 19.28,
+            "end": 19.8
+          },
+          {
+            "text": "법적",
+            "start": 19.8,
+            "end": 20.1
+          },
+          {
+            "text": "근거도",
+            "start": 20.1,
+            "end": 20.48
+          },
+          {
+            "text": "없이",
+            "start": 20.48,
+            "end": 20.7
+          }
+        ]
+      },
+      {
+        "text": "국가 보안 문제라고 탄압하고 짓밟았잖소",
+        "start": 20.7,
+        "end": 24.4,
+        "words": [
+          {
+            "text": "국가",
+            "start": 20.7,
+            "end": 21.4
+          },
+          {
+            "text": "보안",
+            "start": 21.4,
+            "end": 21.78
+          },
+          {
+            "text": "문제라고",
+            "start": 21.78,
+            "end": 22.26
+          },
+          {
+            "text": "탄압하고",
+            "start": 22.26,
+            "end": 23.02
+          },
+          {
+            "text": "짓밟았잖소",
+            "start": 23.02,
+            "end": 24.4
+          }
+        ]
+      }
+    ]
   },
   {
     "video_id": "v_006",
     "actor_id": "박소담",
     "title": "기생충",
     "video_url": "/assets/videos/제시카외동딸.mp4",
-    "script_path": "/assets/scripts/v_004.json"
+    "sentences": [
+      {
+        "text": "제시카 외동딸",
+        "start": 1.41,
+        "end": 3.29,
+        "words": [
+          {
+            "text": "제시카",
+            "start": 1.41,
+            "end": 2.15
+          },
+          {
+            "text": "외동딸",
+            "start": 2.15,
+            "end": 3.29
+          }
+        ]
+      },
+      {
+        "text": "일리노이 시카고",
+        "start": 3.29,
+        "end": 4.77,
+        "words": [
+          {
+            "text": "일리노이",
+            "start": 3.29,
+            "end": 4.21
+          },
+          {
+            "text": "시카고",
+            "start": 4.21,
+            "end": 4.77
+          }
+        ]
+      },
+      {
+        "text": "과선배는 김진모",
+        "start": 4.77,
+        "end": 6.19,
+        "words": [
+          {
+            "text": "과선배는",
+            "start": 4.77,
+            "end": 5.63
+          },
+          {
+            "text": "김진모",
+            "start": 5.63,
+            "end": 6.19
+          }
+        ]
+      },
+      {
+        "text": "그는 니 사촌",
+        "start": 6.19,
+        "end": 7.17,
+        "words": [
+          {
+            "text": "그는",
+            "start": 6.19,
+            "end": 6.63
+          },
+          {
+            "text": "니",
+            "start": 6.63,
+            "end": 6.75
+          },
+          {
+            "text": "사촌",
+            "start": 6.75,
+            "end": 7.17
+          }
+        ]
+      }
+    ]
   }
 ]

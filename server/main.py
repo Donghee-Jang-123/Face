@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
     # 2. 필요한 폴더 생성
     os.makedirs("temp", exist_ok=True)
     os.makedirs("assets", exist_ok=True)
+    os.makedirs("assets/videos", exist_ok=True)
     os.makedirs("data/references", exist_ok=True)
     
     # 3. Assets 폴더 자동 동기화 (새 MP4만 분석)

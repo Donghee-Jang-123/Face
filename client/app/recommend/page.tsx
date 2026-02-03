@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Actor {
@@ -10,12 +10,66 @@ interface Actor {
   description: string;
 }
 
+interface WordTimestamp {
+  text: string;
+  start: number;
+  end: number;
+}
+
+interface Sentence {
+  text: string;
+  start: number;
+  end: number;
+  words: WordTimestamp[];
+}
+
 interface Video {
   video_id: string;
   actor_id: string;
   title: string;
   video_url: string;
   thumbnail?: string;
+  script?: string;  // 영상별 대사
+  sentences?: Sentence[];  // 문장 단위 + 단어별 타임스탬프
+}
+
+interface VideoThumbnailProps {
+  src: string;
+  className?: string;
+  title: string;
+}
+
+function VideoThumbnail({ src, className, title }: VideoThumbnailProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const handleLoadedMetadata = () => {
+    if (!videoRef.current) {
+      return;
+    }
+    // 첫 프레임을 안정적으로 보여주기 위해 아주 살짝 이동
+    videoRef.current.currentTime = 0.01;
+  };
+
+  const handleSeeked = () => {
+    if (!videoRef.current) {
+      return;
+    }
+    videoRef.current.pause();
+  };
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      preload="metadata"
+      muted
+      playsInline
+      className={className}
+      aria-label={title}
+      onLoadedMetadata={handleLoadedMetadata}
+      onSeeked={handleSeeked}
+    />
+  );
 }
 
 export default function RecommendPage() {
@@ -148,10 +202,10 @@ export default function RecommendPage() {
                     className="flex-none w-64 cursor-pointer group snap-start"
                   >
                     <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden border border-gray-700 mb-2 shadow-md group-hover:shadow-blue-500/20 transition-all">
-                       <img 
-                        src={`http://127.0.0.1:8000${recommendedActor?.thumbnail}`} 
-                        alt={video.title}
-                        className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-500"
+                      <VideoThumbnail
+                        src={`http://127.0.0.1:8000${video.video_url}`}
+                        title={video.title}
+                        className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
                         <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
@@ -190,7 +244,12 @@ export default function RecommendPage() {
               className="cursor-pointer group"
             >
               <div className="relative aspect-video bg-gray-800 rounded-xl overflow-hidden mb-3 border border-transparent group-hover:border-gray-600 transition-all shadow-sm group-hover:shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-gray-500">
+                <VideoThumbnail
+                  src={`http://127.0.0.1:8000${video.video_url}`}
+                  title={video.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-gray-500 hidden">
                   <svg className="w-12 h-12 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
                 </div>
                 

@@ -68,7 +68,8 @@ class ActingAnalysisPipeline:
 
     def __init__(
         self,
-        assets_dir: str | Path = "assets",
+        # NOTE: 레퍼런스 비디오는 assets/videos 아래에 둡니다.
+        assets_dir: str | Path = "assets/videos",
         reference_dir: str | Path = "data/references",
         analysis_service: Optional[ReferenceAnalysisService] = None,
         dtw_service: Optional[DTWService] = None,
@@ -76,7 +77,7 @@ class ActingAnalysisPipeline:
     ):
         """
         Args:
-            assets_dir: 레퍼런스 MP4 파일이 있는 디렉토리
+            assets_dir: 레퍼런스 비디오 파일이 있는 디렉토리 (기본: assets/videos)
             reference_dir: 분석 결과 파일 저장 디렉토리
             analysis_service: 분석 서비스 (None이면 기본 인스턴스)
             dtw_service: DTW 서비스 (None이면 기본 인스턴스)

@@ -219,6 +219,21 @@ function RadarChart({ pitch, energy, expression, size = 180 }: RadarChartProps) 
   );
 }
 
+// 단어별 타임스탬프 타입
+interface WordTimestamp {
+  text: string;
+  start: number;
+  end: number;
+}
+
+// 문장 단위 타입
+interface Sentence {
+  text: string;
+  start: number;
+  end: number;
+  words: WordTimestamp[];
+}
+
 // 선택된 비디오 타입 정의
 interface SelectedVideo {
   video_id: string;
@@ -226,6 +241,66 @@ interface SelectedVideo {
   title: string;
   video_url: string;
   thumbnail?: string;
+  script?: string;  // 영상별 대사 (전체)
+  sentences?: Sentence[];  // 문장 단위 + 단어별 타임스탬프
+}
+
+// =========================================================================
+// 카라오케 스타일 자막 컴포넌트 (문장 단위)
+// =========================================================================
+interface SubtitleOverlayProps {
+  sentences: Sentence[];
+  currentTime: number;
+}
+
+function SubtitleOverlay({ sentences, currentTime }: SubtitleOverlayProps) {
+  // 현재 시간에 해당하는 문장 찾기
+  const currentSentence = sentences.find(
+    s => currentTime >= s.start && currentTime < s.end
+  );
+  
+  if (!currentSentence) {
+    return null;
+  }
+  
+  // 단어별 타임스탬프가 있으면 하이라이트, 없으면 문장만 표시
+  const hasWords = currentSentence.words && currentSentence.words.length > 0;
+  
+  return (
+    <div className="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-none z-10">
+      <div className="bg-black/70 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/20 shadow-2xl">
+        {hasWords ? (
+          <div className="flex flex-wrap gap-x-2 justify-center items-center">
+            {currentSentence.words.map((word, index) => {
+              const isActive = currentTime >= word.start && currentTime < word.end;
+              const isPast = currentTime >= word.end;
+              
+              return (
+                <span
+                  key={index}
+                  className={`
+                    text-2xl font-bold transition-all duration-100
+                    ${isActive 
+                      ? 'text-yellow-300 scale-110 drop-shadow-[0_0_10px_rgba(253,224,71,0.8)]' 
+                      : isPast 
+                        ? 'text-white/50' 
+                        : 'text-white'
+                    }
+                  `}
+                >
+                  {word.text}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-2xl font-bold text-white text-center">
+            {currentSentence.text}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function ActingPage() {
@@ -245,6 +320,10 @@ export default function ActingPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string } | null>(null);
   
+  // 녹화 시간 트래킹 (자막 싱크용)
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const [recordingElapsedTime, setRecordingElapsedTime] = useState(0);
+  
   // 분석 결과 상태
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   
@@ -257,6 +336,9 @@ export default function ActingPage() {
 
   // 선택된 비디오 상태
   const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
+
+  // 레퍼런스 비디오 현재 재생 시간 (카라오케 싱크용)
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
 
   // localStorage에서 선택된 비디오 불러오기
   useEffect(() => {
@@ -367,6 +449,10 @@ export default function ActingPage() {
     setRecordedChunks([]);
     setUploadResult(null);
     setIsRecording(true);
+    
+    // 녹화 시간 트래킹 시작
+    setRecordingStartTime(Date.now());
+    setRecordingElapsedTime(0);
 
     try {
       const mediaRecorder = new MediaRecorder(stream, {
@@ -384,6 +470,7 @@ export default function ActingPage() {
     } catch (error) {
       console.error('MediaRecorder 생성 실패:', error);
       setIsRecording(false);
+      setRecordingStartTime(null);
     }
   }, [stream, handleDataAvailable, recordedChunks.length]);
 
@@ -392,9 +479,23 @@ export default function ActingPage() {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setRecordingStartTime(null);
+      setRecordingElapsedTime(0);
       console.log('녹화 종료!');
     }
   }, []);
+  
+  // 녹화 중 경과 시간 업데이트 (자막 싱크용)
+  useEffect(() => {
+    if (!isRecording || recordingStartTime === null) return;
+    
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - recordingStartTime) / 1000; // 초 단위
+      setRecordingElapsedTime(elapsed);
+    }, 50); // 50ms마다 업데이트 (부드러운 자막 전환)
+    
+    return () => clearInterval(interval);
+  }, [isRecording, recordingStartTime]);
 
   // 서버로 업로드
   const handleUpload = useCallback(async () => {
@@ -733,6 +834,14 @@ export default function ActingPage() {
               />
             )}
             
+            {/* 자막 오버레이 (녹화 중일 때만 웹캠 위에 표시) */}
+            {isRecording && selectedVideo?.sentences && selectedVideo.sentences.length > 0 && (
+              <SubtitleOverlay 
+                sentences={selectedVideo.sentences} 
+                currentTime={recordingElapsedTime}
+              />
+            )}
+            
             {/* 상태 표시 (LIVE / REC) */}
             {!cameraError && !isCameraLoading && (
               <div className={`absolute top-4 left-4 flex items-center gap-2 px-3 py-1 rounded-full ${
@@ -826,6 +935,7 @@ export default function ActingPage() {
                 controls
                 className="w-full h-full object-contain"
                 controlsList="nodownload"
+                onTimeUpdate={(e) => setVideoCurrentTime(e.currentTarget.currentTime)}
               >
                 <source src={referenceVideoUrl} type="video/mp4" />
                 브라우저가 비디오 재생을 지원하지 않습니다.
@@ -846,8 +956,21 @@ export default function ActingPage() {
             <p className="text-gray-300 text-sm">
               <span className="font-medium text-white">현재 영상:</span> {selectedVideo?.title || '선택된 영상 없음'}
             </p>
-            <p className="text-gray-500 text-xs mt-1">
-              {selectedVideo ? '영상을 보면서 따라해보세요!' : '배우 추천 페이지에서 영상을 선택해주세요'}
+            
+            {/* 전체 대사 표시 */}
+            {selectedVideo?.script && (
+              <div className="mt-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700">
+                <p className="text-gray-400 text-xs mb-1 uppercase tracking-wider">전체 대사</p>
+                <p className="text-white text-sm leading-relaxed">
+                  "{selectedVideo.script}"
+                </p>
+              </div>
+            )}
+            
+            <p className="text-gray-500 text-xs mt-2">
+              {selectedVideo 
+                ? '▶ 영상을 재생하면 왼쪽 웹캠 화면에 자막이 표시됩니다' 
+                : '배우 추천 페이지에서 영상을 선택해주세요'}
             </p>
           </div>
         </div>
