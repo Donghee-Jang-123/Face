@@ -1,16 +1,17 @@
 """
-Scoring Service (Stage 3)
+Scoring Service (Stage 3) - Ultra-Precision Feedback
 
 DTW 동기화 결과를 사용하여 사용자의 연기를 레퍼런스 배우와 비교 평가합니다.
 
 평가 항목:
-- Audio: 피치(억양) + 에너지(볼륨) 패턴 유사도
-- Video: 블렌드쉐입(표정) 유사도
+- Audio: 피치(억양) + 에너지(볼륨) 패턴 유사도 (서브메트릭 포함)
+- Video: 블렌드쉐입(표정) 유사도 (얼굴 영역별 분석)
 
 핵심 특징:
 - DTW 워핑 경로를 사용한 정확한 프레임 대 프레임 비교
 - 정규화된 비교로 개인 차이(음역대, 볼륨 등) 보정
-- 항목별 세부 피드백 제공
+- Ultra-Precision: 각 카테고리별 서브메트릭 기반 세밀한 피드백
+- 가장 낮은 서브메트릭에 기반한 스마트 피드백 생성
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from app.core.schemas import (
     DTWResult,
     ScoreDetail,
     ScoringResult,
+    SubMetric,
 )
 
 
@@ -65,15 +67,59 @@ class DetailedFeedback:
 
 class ScoringService:
     """
-    연기 스코어링 서비스.
+    연기 스코어링 서비스 (Ultra-Precision Feedback).
     
     DTW 동기화 결과를 사용하여 사용자와 레퍼런스를 비교 평가합니다.
+    각 카테고리를 서브메트릭으로 세분화하여 정밀한 피드백을 제공합니다.
     """
 
     # 가중치 설정 (합계 = 1.0)
     WEIGHT_PITCH = 0.30      # 억양 (대사 전달에 중요)
     WEIGHT_ENERGY = 0.20     # 볼륨/강세
     WEIGHT_EXPRESSION = 0.50  # 표정 (연기의 핵심)
+
+    # =========================================================================
+    # 서브메트릭 가중치 설정
+    # =========================================================================
+    
+    # Pitch 서브메트릭 가중치
+    PITCH_PATTERN_WEIGHT = 0.70    # 패턴 매칭 (멜로디가 맞는지)
+    PITCH_RANGE_WEIGHT = 0.30      # 다이내믹 레인지 (단조롭지 않은지)
+    
+    # Energy 서브메트릭 가중치
+    ENERGY_PATTERN_WEIGHT = 0.70   # 패턴 매칭 (강세 위치)
+    ENERGY_INTENSITY_WEIGHT = 0.30 # 인텐시티 (다이내믹 레인지)
+    
+    # Expression 서브메트릭 가중치 (얼굴 영역별)
+    EXPRESSION_EYES_WEIGHT = 0.40   # 눈 (감정의 진정성)
+    EXPRESSION_MOUTH_WEIGHT = 0.20  # 입 (대사 전달)
+    EXPRESSION_BROWS_WEIGHT = 0.40  # 눈썹 (감정 표현)
+
+    # =========================================================================
+    # 블렌드쉐입 그룹 정의 (얼굴 영역별)
+    # =========================================================================
+    
+    # 눈 관련 블렌드쉐입
+    EYE_BLENDSHAPES = [
+        "eyeWideLeft", "eyeWideRight",
+        "eyeSquintLeft", "eyeSquintRight",
+        "eyeBlinkLeft", "eyeBlinkRight",
+    ]
+    
+    # 입 관련 블렌드쉐입
+    MOUTH_BLENDSHAPES = [
+        "jawOpen",
+        "mouthSmileLeft", "mouthSmileRight",
+        "mouthFrownLeft", "mouthFrownRight",
+        "mouthPucker", "mouthLeft", "mouthRight",
+    ]
+    
+    # 눈썹 관련 블렌드쉐입
+    BROW_BLENDSHAPES = [
+        "browInnerUp",
+        "browDownLeft", "browDownRight",
+        "browOuterUpLeft", "browOuterUpRight",
+    ]
 
     # 블렌드쉐입별 가중치 (연기에서 중요한 표정)
     BLENDSHAPE_WEIGHTS = {
@@ -122,7 +168,7 @@ class ScoringService:
         self.weight_energy = energy_weight / total
         self.weight_expression = expression_weight / total
 
-        print(f"📊 ScoringService: 초기화 완료")
+        print(f"📊 ScoringService (Ultra-Precision): 초기화 완료")
         print(f"   가중치 - 피치: {self.weight_pitch:.0%}, "
               f"에너지: {self.weight_energy:.0%}, "
               f"표정: {self.weight_expression:.0%}")
@@ -134,7 +180,7 @@ class ScoringService:
         dtw_result: DTWResult,
     ) -> ScoringResult:
         """
-        사용자 연기 평가.
+        사용자 연기 평가 (Ultra-Precision Feedback).
         
         Args:
             user_analysis: 사용자 분석 결과 (Stage 1에서 생성)
@@ -142,7 +188,7 @@ class ScoringService:
             dtw_result: DTW 동기화 결과 (Stage 2에서 생성)
             
         Returns:
-            ScoringResult: 종합 평가 결과
+            ScoringResult: 종합 평가 결과 (서브메트릭 포함)
         """
         # 워핑 경로에서 정렬된 프레임 쌍 추출
         aligned_pairs = dtw_result.warping_path
@@ -150,16 +196,16 @@ class ScoringService:
         if not aligned_pairs:
             return self._empty_result(dtw_result)
 
-        # 1. 오디오 점수 계산
-        pitch_detail = self._score_pitch(
+        # 1. 오디오 점수 계산 (서브메트릭 포함)
+        pitch_detail = self._score_pitch_advanced(
             user_analysis, reference, aligned_pairs
         )
-        energy_detail = self._score_energy(
+        energy_detail = self._score_energy_advanced(
             user_analysis, reference, aligned_pairs
         )
 
-        # 2. 비디오(표정) 점수 계산
-        expression_detail = self._score_expression(
+        # 2. 비디오(표정) 점수 계산 (얼굴 영역별)
+        expression_detail = self._score_expression_advanced(
             user_analysis, reference, aligned_pairs
         )
 
@@ -170,8 +216,8 @@ class ScoringService:
             expression_detail.score * self.weight_expression
         )
 
-        # 4. 종합 피드백 생성
-        overall_feedback = self._generate_overall_feedback(
+        # 4. 종합 피드백 생성 (스마트 피드백)
+        overall_feedback = self._generate_overall_feedback_smart(
             total_score, pitch_detail, energy_detail, expression_detail
         )
 
@@ -203,19 +249,21 @@ class ScoringService:
         return result, frame_scores
 
     # =========================================================================
-    # 오디오 스코어링
+    # 오디오 스코어링 (Ultra-Precision)
     # =========================================================================
 
-    def _score_pitch(
+    def _score_pitch_advanced(
         self,
         user: AnalysisResult,
         ref: AnalysisResult,
         aligned_pairs: list[tuple[int, int]],
     ) -> ScoreDetail:
         """
-        피치(억양) 패턴 유사도 평가.
+        피치(억양) 패턴 유사도 평가 - Ultra-Precision.
         
-        절대 피치가 아닌 상대적 피치 변화 패턴을 비교합니다.
+        서브메트릭:
+        1. Pattern Match (70%): Z-정규화된 델타 피치의 코사인 유사도
+        2. Dynamic Range (30%): 사용자 vs 배우의 표준편차 비교
         """
         user_pitches = []
         ref_pitches = []
@@ -235,41 +283,103 @@ class ScoringService:
                 score=50.0,
                 weight=self.weight_pitch,
                 feedback="음성 데이터가 부족하여 정확한 평가가 어렵습니다.",
+                sub_metrics=[],
             )
 
+        user_arr = np.array(user_pitches)
+        ref_arr = np.array(ref_pitches)
+
+        # =====================================================================
+        # 서브메트릭 1: Pattern Match (70%)
+        # =====================================================================
         # 피치를 상대적 변화율로 변환 (델타 피치)
-        user_delta = self._compute_delta(np.array(user_pitches))
-        ref_delta = self._compute_delta(np.array(ref_pitches))
+        user_delta = self._compute_delta(user_arr)
+        ref_delta = self._compute_delta(ref_arr)
 
         # Z-score 정규화 후 비교
         user_norm = self._zscore_normalize(user_delta)
         ref_norm = self._zscore_normalize(ref_delta)
 
         # 코사인 유사도 계산
-        similarity = self._cosine_similarity(user_norm, ref_norm)
+        pattern_similarity = self._cosine_similarity(user_norm, ref_norm)
+        pattern_score = max(0.0, min(100.0, pattern_similarity * 100))
+
+        # =====================================================================
+        # 서브메트릭 2: Dynamic Range (30%)
+        # =====================================================================
+        user_std = np.std(user_arr)
+        ref_std = np.std(ref_arr)
         
-        # 0-100 점수로 변환
-        score = max(0.0, min(100.0, similarity * 100))
+        # 배우 대비 사용자의 다이내믹 레인지 비율
+        if ref_std > 1e-8:
+            range_ratio = user_std / ref_std
+            # 비율이 1에 가까울수록 좋음, 너무 작으면 단조로움
+            if range_ratio >= 1.0:
+                range_score = 100.0
+            else:
+                range_score = min(100.0, range_ratio * 100)
+        else:
+            range_score = 100.0  # 레퍼런스도 변화가 없으면 만점
 
-        # 피드백 생성
-        feedback = self._generate_pitch_feedback(score, user_pitches, ref_pitches)
-
-        return ScoreDetail(
-            score=round(score, 1),
-            weight=self.weight_pitch,
-            feedback=feedback,
+        # =====================================================================
+        # 종합 점수 및 서브메트릭 생성
+        # =====================================================================
+        final_score = (
+            pattern_score * self.PITCH_PATTERN_WEIGHT +
+            range_score * self.PITCH_RANGE_WEIGHT
         )
 
-    def _score_energy(
+        # 서브메트릭 피드백 생성
+        pattern_feedback = self._generate_pitch_pattern_feedback(pattern_score)
+        range_feedback = self._generate_pitch_range_feedback(range_score, range_ratio if ref_std > 1e-8 else 1.0)
+
+        sub_metrics = [
+            SubMetric(
+                name="pattern_match",
+                score=round(pattern_score, 1),
+                weight=self.PITCH_PATTERN_WEIGHT,
+                feedback=pattern_feedback,
+                details={
+                    "description": "억양 패턴 (멜로디) 일치도",
+                    "method": "Z-normalized Delta Pitch Cosine Similarity",
+                }
+            ),
+            SubMetric(
+                name="dynamic_range",
+                score=round(range_score, 1),
+                weight=self.PITCH_RANGE_WEIGHT,
+                feedback=range_feedback,
+                details={
+                    "description": "음높이 변화 폭",
+                    "user_std": round(float(user_std), 2),
+                    "actor_std": round(float(ref_std), 2),
+                    "ratio": round(float(range_ratio) if ref_std > 1e-8 else 1.0, 2),
+                }
+            ),
+        ]
+
+        # 스마트 피드백: 가장 낮은 서브메트릭 기반
+        smart_feedback = self._generate_pitch_smart_feedback(pattern_score, range_score)
+
+        return ScoreDetail(
+            score=round(final_score, 1),
+            weight=self.weight_pitch,
+            feedback=smart_feedback,
+            sub_metrics=sub_metrics,
+        )
+
+    def _score_energy_advanced(
         self,
         user: AnalysisResult,
         ref: AnalysisResult,
         aligned_pairs: list[tuple[int, int]],
     ) -> ScoreDetail:
         """
-        에너지(볼륨) 패턴 유사도 평가.
+        에너지(볼륨) 패턴 유사도 평가 - Ultra-Precision.
         
-        강세와 볼륨 변화 패턴을 비교합니다.
+        서브메트릭:
+        1. Pattern Match (70%): 에너지 곡선의 상관계수/코사인 유사도
+        2. Intensity (30%): 다이내믹 레인지 (Max - Min) 비교
         """
         user_energies = []
         ref_energies = []
@@ -287,11 +397,18 @@ class ScoringService:
                 score=50.0,
                 weight=self.weight_energy,
                 feedback="음성 데이터가 부족하여 정확한 평가가 어렵습니다.",
+                sub_metrics=[],
             )
 
+        user_arr = np.array(user_energies)
+        ref_arr = np.array(ref_energies)
+
+        # =====================================================================
+        # 서브메트릭 1: Pattern Match (70%)
+        # =====================================================================
         # Min-Max 정규화 (볼륨 차이 보정)
-        user_norm = self._minmax_normalize(np.array(user_energies))
-        ref_norm = self._minmax_normalize(np.array(ref_energies))
+        user_norm = self._minmax_normalize(user_arr)
+        ref_norm = self._minmax_normalize(ref_arr)
 
         # 상관계수 기반 유사도
         correlation = np.corrcoef(user_norm, ref_norm)[0, 1]
@@ -299,35 +416,98 @@ class ScoringService:
             correlation = 0.0
 
         # 0-100 점수로 변환 (상관계수 -1~1 → 0~100)
-        score = max(0.0, min(100.0, (correlation + 1) * 50))
+        pattern_score = max(0.0, min(100.0, (correlation + 1) * 50))
 
-        # 피드백 생성
-        feedback = self._generate_energy_feedback(score, user_energies, ref_energies)
+        # =====================================================================
+        # 서브메트릭 2: Intensity (30%)
+        # =====================================================================
+        user_range = float(np.max(user_arr) - np.min(user_arr))
+        ref_range = float(np.max(ref_arr) - np.min(ref_arr))
+        
+        # 배우 대비 사용자의 다이내믹 레인지 비율
+        if ref_range > 1e-8:
+            intensity_ratio = user_range / ref_range
+            if intensity_ratio >= 1.0:
+                intensity_score = 100.0
+            else:
+                intensity_score = min(100.0, intensity_ratio * 100)
+        else:
+            intensity_score = 100.0
+
+        # =====================================================================
+        # 종합 점수 및 서브메트릭 생성
+        # =====================================================================
+        final_score = (
+            pattern_score * self.ENERGY_PATTERN_WEIGHT +
+            intensity_score * self.ENERGY_INTENSITY_WEIGHT
+        )
+
+        # 서브메트릭 피드백 생성
+        pattern_feedback = self._generate_energy_pattern_feedback(pattern_score)
+        intensity_feedback = self._generate_energy_intensity_feedback(
+            intensity_score, intensity_ratio if ref_range > 1e-8 else 1.0
+        )
+
+        sub_metrics = [
+            SubMetric(
+                name="pattern_match",
+                score=round(pattern_score, 1),
+                weight=self.ENERGY_PATTERN_WEIGHT,
+                feedback=pattern_feedback,
+                details={
+                    "description": "볼륨 패턴 (강세 위치) 일치도",
+                    "method": "Normalized Energy Correlation",
+                    "correlation": round(float(correlation), 3),
+                }
+            ),
+            SubMetric(
+                name="intensity",
+                score=round(intensity_score, 1),
+                weight=self.ENERGY_INTENSITY_WEIGHT,
+                feedback=intensity_feedback,
+                details={
+                    "description": "볼륨 다이내믹 레인지 (속삭임~외침)",
+                    "user_range": round(user_range, 4),
+                    "actor_range": round(ref_range, 4),
+                    "ratio": round(float(intensity_ratio) if ref_range > 1e-8 else 1.0, 2),
+                }
+            ),
+        ]
+
+        # 스마트 피드백: 가장 낮은 서브메트릭 기반
+        smart_feedback = self._generate_energy_smart_feedback(pattern_score, intensity_score)
 
         return ScoreDetail(
-            score=round(score, 1),
+            score=round(final_score, 1),
             weight=self.weight_energy,
-            feedback=feedback,
+            feedback=smart_feedback,
+            sub_metrics=sub_metrics,
         )
 
     # =========================================================================
-    # 비디오(표정) 스코어링
+    # 비디오(표정) 스코어링 (Ultra-Precision)
     # =========================================================================
 
-    def _score_expression(
+    def _score_expression_advanced(
         self,
         user: AnalysisResult,
         ref: AnalysisResult,
         aligned_pairs: list[tuple[int, int]],
     ) -> ScoreDetail:
         """
-        표정(블렌드쉐입) 유사도 평가.
+        표정(블렌드쉐입) 유사도 평가 - Ultra-Precision.
         
-        가중치가 적용된 블렌드쉐입 벡터를 비교합니다.
+        얼굴을 3개 영역으로 나누어 개별 평가:
+        1. Eyes (40%): eyeWide, eyeSquint, eyeBlink
+        2. Mouth (20%): jawOpen, mouthSmile, mouthFrown, mouthPucker
+        3. Brows (40%): browInnerUp, browDown, browOuterUp
         """
-        frame_scores = []
+        # 프레임별 영역별 점수 수집
+        eye_scores = []
+        mouth_scores = []
+        brow_scores = []
+        face_detection_count = 0
         valid_frames = 0
-        face_detection_rate = 0
 
         for user_idx, ref_idx in aligned_pairs:
             user_frame = user.frames[user_idx] if user_idx < len(user.frames) else None
@@ -339,7 +519,7 @@ class ScoringService:
 
             # 얼굴 검출 여부 체크
             if user_frame.video.face_detected:
-                face_detection_rate += 1
+                face_detection_count += 1
 
             if not (user_frame.video.blendshapes and 
                     ref_frame.video.blendshapes):
@@ -347,61 +527,128 @@ class ScoringService:
 
             valid_frames += 1
 
-            # 블렌드쉐입 벡터 추출
-            user_bs = user_frame.video.blendshapes.to_vector()
-            ref_bs = ref_frame.video.blendshapes.to_vector()
+            # 블렌드쉐입 딕셔너리로 변환
+            user_bs = user_frame.video.blendshapes.model_dump()
+            ref_bs = ref_frame.video.blendshapes.model_dump()
 
-            # 가중치 적용
-            weights = self._get_blendshape_weights()
-            user_weighted = np.array(user_bs) * weights
-            ref_weighted = np.array(ref_bs) * weights
+            # 영역별 유사도 계산
+            eye_sim = self._calculate_zone_similarity(user_bs, ref_bs, self.EYE_BLENDSHAPES)
+            mouth_sim = self._calculate_zone_similarity(user_bs, ref_bs, self.MOUTH_BLENDSHAPES)
+            brow_sim = self._calculate_zone_similarity(user_bs, ref_bs, self.BROW_BLENDSHAPES)
 
-            # 프레임별 유사도 (코사인 유사도)
-            similarity = self._cosine_similarity(user_weighted, ref_weighted)
-            frame_scores.append(max(0.0, similarity))
+            eye_scores.append(eye_sim)
+            mouth_scores.append(mouth_sim)
+            brow_scores.append(brow_sim)
 
         if valid_frames < 5:
-            detection_pct = (face_detection_rate / len(aligned_pairs) * 100 
+            detection_pct = (face_detection_count / len(aligned_pairs) * 100 
                            if aligned_pairs else 0)
             return ScoreDetail(
                 score=50.0,
                 weight=self.weight_expression,
                 feedback=f"얼굴 인식률이 낮습니다 ({detection_pct:.0f}%). "
                         f"카메라를 정면으로 바라봐 주세요.",
+                sub_metrics=[],
             )
 
-        # 평균 점수
-        avg_score = np.mean(frame_scores) * 100
+        # =====================================================================
+        # 영역별 평균 점수 계산
+        # =====================================================================
+        eye_score = np.mean(eye_scores) * 100 if eye_scores else 50.0
+        mouth_score = np.mean(mouth_scores) * 100 if mouth_scores else 50.0
+        brow_score = np.mean(brow_scores) * 100 if brow_scores else 50.0
 
-        # 피드백 생성
-        feedback = self._generate_expression_feedback(
-            avg_score, frame_scores, face_detection_rate / len(aligned_pairs)
+        # 종합 점수 (가중 평균)
+        final_score = (
+            eye_score * self.EXPRESSION_EYES_WEIGHT +
+            mouth_score * self.EXPRESSION_MOUTH_WEIGHT +
+            brow_score * self.EXPRESSION_BROWS_WEIGHT
+        )
+
+        # 얼굴 인식률
+        face_detection_rate = face_detection_count / len(aligned_pairs) if aligned_pairs else 0
+
+        # =====================================================================
+        # 서브메트릭 생성
+        # =====================================================================
+        eye_feedback = self._generate_eye_feedback(eye_score)
+        mouth_feedback = self._generate_mouth_feedback(mouth_score)
+        brow_feedback = self._generate_brow_feedback(brow_score)
+
+        sub_metrics = [
+            SubMetric(
+                name="eyes",
+                score=round(eye_score, 1),
+                weight=self.EXPRESSION_EYES_WEIGHT,
+                feedback=eye_feedback,
+                details={
+                    "description": "눈 표현 (감정의 진정성)",
+                    "blendshapes": self.EYE_BLENDSHAPES,
+                    "frame_count": len(eye_scores),
+                }
+            ),
+            SubMetric(
+                name="mouth",
+                score=round(mouth_score, 1),
+                weight=self.EXPRESSION_MOUTH_WEIGHT,
+                feedback=mouth_feedback,
+                details={
+                    "description": "입 표현 (대사 전달)",
+                    "blendshapes": self.MOUTH_BLENDSHAPES,
+                    "frame_count": len(mouth_scores),
+                }
+            ),
+            SubMetric(
+                name="brows",
+                score=round(brow_score, 1),
+                weight=self.EXPRESSION_BROWS_WEIGHT,
+                feedback=brow_feedback,
+                details={
+                    "description": "눈썹 표현 (감정 강조)",
+                    "blendshapes": self.BROW_BLENDSHAPES,
+                    "frame_count": len(brow_scores),
+                }
+            ),
+        ]
+
+        # 스마트 피드백: 가장 낮은 서브메트릭 기반
+        smart_feedback = self._generate_expression_smart_feedback(
+            eye_score, mouth_score, brow_score, face_detection_rate
         )
 
         return ScoreDetail(
-            score=round(avg_score, 1),
+            score=round(final_score, 1),
             weight=self.weight_expression,
-            feedback=feedback,
+            feedback=smart_feedback,
+            sub_metrics=sub_metrics,
         )
 
-    def _get_blendshape_weights(self) -> NDArray[np.floating]:
-        """블렌드쉐입 가중치 벡터 반환 (to_vector() 순서와 동일)."""
-        keys = [
-            "jawOpen",
-            "mouthSmileLeft", "mouthSmileRight",
-            "mouthFrownLeft", "mouthFrownRight",
-            "mouthPucker", "mouthLeft", "mouthRight",
-            "browInnerUp", "browDownLeft", "browDownRight",
-            "browOuterUpLeft", "browOuterUpRight",
-            "eyeWideLeft", "eyeWideRight",
-            "eyeSquintLeft", "eyeSquintRight",
-            "eyeBlinkLeft", "eyeBlinkRight",
-            "cheekPuff", "noseSneerLeft", "noseSneerRight",
-        ]
-        weights = [self.BLENDSHAPE_WEIGHTS.get(k, 1.0) for k in keys]
-        # 정규화
-        weights = np.array(weights)
-        return weights / np.sum(weights) * len(weights)
+    def _calculate_zone_similarity(
+        self,
+        user_bs: dict,
+        ref_bs: dict,
+        zone_keys: list[str],
+    ) -> float:
+        """특정 얼굴 영역의 블렌드쉐입 유사도 계산."""
+        user_values = []
+        ref_values = []
+        
+        for key in zone_keys:
+            user_val = user_bs.get(key, 0.0)
+            ref_val = ref_bs.get(key, 0.0)
+            if user_val is not None and ref_val is not None:
+                # 가중치 적용
+                weight = self.BLENDSHAPE_WEIGHTS.get(key, 1.0)
+                user_values.append(float(user_val) * weight)
+                ref_values.append(float(ref_val) * weight)
+        
+        if len(user_values) < 2:
+            return 0.5  # 데이터 부족 시 기본값
+        
+        user_arr = np.array(user_values)
+        ref_arr = np.array(ref_values)
+        
+        return self._cosine_similarity(user_arr, ref_arr)
 
     # =========================================================================
     # 유틸리티 함수
@@ -474,93 +721,163 @@ class ScoringService:
             return ScoreGrade.F
 
     # =========================================================================
-    # 피드백 생성
+    # 스마트 피드백 생성 (서브메트릭 기반)
     # =========================================================================
 
-    def _generate_pitch_feedback(
-        self,
-        score: float,
-        user_pitches: list[float],
-        ref_pitches: list[float],
-    ) -> str:
-        """피치 점수에 대한 피드백 생성."""
-        grade = self._get_grade(score)
-        
-        # 피치 범위 분석
-        user_range = max(user_pitches) - min(user_pitches) if user_pitches else 0
-        ref_range = max(ref_pitches) - min(ref_pitches) if ref_pitches else 0
-        
-        if grade in (ScoreGrade.S, ScoreGrade.A):
-            return "억양 패턴이 레퍼런스와 매우 유사합니다. 훌륭해요!"
-        elif grade == ScoreGrade.B:
-            return "억양이 대체로 잘 맞지만, 일부 구간에서 차이가 있습니다."
-        elif grade == ScoreGrade.C:
-            if user_range < ref_range * 0.7:
-                return "억양 변화가 다소 평탄합니다. 감정을 더 실어 말해보세요."
-            elif user_range > ref_range * 1.3:
-                return "억양 변화가 과합니다. 조금 더 자연스럽게 말해보세요."
-            return "억양 패턴을 레퍼런스에 맞춰 연습해보세요."
+    def _generate_pitch_pattern_feedback(self, score: float) -> str:
+        """피치 패턴 서브메트릭 피드백."""
+        if score >= 80:
+            return "억양의 멜로디가 정확합니다."
+        elif score >= 60:
+            return "억양 패턴이 대체로 맞지만 일부 구간에서 차이가 있습니다."
         else:
-            return "억양이 레퍼런스와 많이 다릅니다. 대사의 감정선을 다시 확인해보세요."
+            return "억양의 오르내림이 레퍼런스와 다릅니다."
 
-    def _generate_energy_feedback(
-        self,
-        score: float,
-        user_energies: list[float],
-        ref_energies: list[float],
-    ) -> str:
-        """에너지 점수에 대한 피드백 생성."""
-        grade = self._get_grade(score)
-        
-        user_avg = np.mean(user_energies) if user_energies else 0
-        ref_avg = np.mean(ref_energies) if ref_energies else 0
-        
-        if grade in (ScoreGrade.S, ScoreGrade.A):
-            return "볼륨과 강세가 레퍼런스와 잘 맞습니다!"
-        elif grade == ScoreGrade.B:
-            return "볼륨 패턴이 대체로 좋지만, 강세 위치를 조금 더 맞춰보세요."
-        elif grade == ScoreGrade.C:
-            if user_avg < ref_avg * 0.7:
-                return "전체적으로 소리가 작습니다. 더 크게 말해보세요."
-            elif user_avg > ref_avg * 1.3:
-                return "전체적으로 소리가 큽니다. 볼륨을 조절해보세요."
-            return "강세와 볼륨 변화를 레퍼런스에 맞춰 연습해보세요."
+    def _generate_pitch_range_feedback(self, score: float, ratio: float) -> str:
+        """피치 다이내믹 레인지 서브메트릭 피드백."""
+        if score >= 80:
+            return "음높이 변화 폭이 적절합니다."
+        elif ratio < 0.5:
+            return "음높이 변화가 너무 적습니다 (단조로움)."
+        elif ratio < 0.8:
+            return "음높이 변화가 다소 부족합니다."
         else:
-            return "볼륨 패턴이 많이 다릅니다. 대사의 강약을 다시 확인해보세요."
+            return "음높이 변화 폭을 더 키워보세요."
 
-    def _generate_expression_feedback(
+    def _generate_pitch_smart_feedback(self, pattern_score: float, range_score: float) -> str:
+        """피치 스마트 피드백 - 가장 낮은 서브메트릭 기반."""
+        if pattern_score >= 80 and range_score >= 80:
+            return "억양 패턴과 변화 폭 모두 훌륭합니다!"
+        
+        if range_score < pattern_score:
+            # 패턴은 맞지만 레인지가 부족
+            if pattern_score >= 70:
+                return "억양은 정확하지만, 톤이 너무 평탄합니다. 감정을 더 극적으로 표현해보세요."
+            else:
+                return "억양 패턴과 변화 폭 모두 연습이 필요합니다."
+        else:
+            # 레인지는 있지만 패턴이 다름
+            if range_score >= 70:
+                return "감정 표현은 풍부하지만, 억양의 오르내림 위치가 다릅니다. 멜로디를 맞춰보세요."
+            else:
+                return "억양 패턴을 레퍼런스에 맞춰 연습해보세요."
+
+    def _generate_energy_pattern_feedback(self, score: float) -> str:
+        """에너지 패턴 서브메트릭 피드백."""
+        if score >= 80:
+            return "강세 위치가 정확합니다."
+        elif score >= 60:
+            return "강세 패턴이 대체로 맞지만 일부 단어에서 차이가 있습니다."
+        else:
+            return "강세를 주는 위치가 레퍼런스와 다릅니다."
+
+    def _generate_energy_intensity_feedback(self, score: float, ratio: float) -> str:
+        """에너지 인텐시티 서브메트릭 피드백."""
+        if score >= 80:
+            return "볼륨 강약이 적절합니다."
+        elif ratio < 0.5:
+            return "볼륨 변화가 너무 작습니다 (단조로움)."
+        elif ratio < 0.8:
+            return "볼륨 변화가 다소 부족합니다."
+        else:
+            return "속삭임과 외침의 대비를 더 키워보세요."
+
+    def _generate_energy_smart_feedback(self, pattern_score: float, intensity_score: float) -> str:
+        """에너지 스마트 피드백 - 가장 낮은 서브메트릭 기반."""
+        if pattern_score >= 80 and intensity_score >= 80:
+            return "볼륨 패턴과 강약 조절 모두 훌륭합니다!"
+        
+        if intensity_score < pattern_score:
+            # 패턴은 맞지만 강약이 부족
+            if pattern_score >= 70:
+                return "강세 위치는 맞지만, 속삭임과 외침의 대비가 부족합니다. 더 역동적으로 표현해보세요."
+            else:
+                return "볼륨 패턴과 강약 조절 모두 연습이 필요합니다."
+        else:
+            # 강약은 있지만 패턴이 다름
+            if intensity_score >= 70:
+                return "볼륨 변화는 풍부하지만, 강세를 주는 단어가 다릅니다. 강조 위치를 맞춰보세요."
+            else:
+                return "강세 패턴을 레퍼런스에 맞춰 연습해보세요."
+
+    def _generate_eye_feedback(self, score: float) -> str:
+        """눈 표현 서브메트릭 피드백."""
+        if score >= 80:
+            return "눈 표현이 감정을 잘 전달합니다."
+        elif score >= 60:
+            return "눈 표현이 대체로 좋지만 더 강조할 수 있습니다."
+        else:
+            return "눈에 감정이 부족합니다. 눈으로 더 표현해보세요."
+
+    def _generate_mouth_feedback(self, score: float) -> str:
+        """입 표현 서브메트릭 피드백."""
+        if score >= 80:
+            return "입 모양과 움직임이 정확합니다."
+        elif score >= 60:
+            return "입 표현이 대체로 좋지만 발음을 더 명확히 해보세요."
+        else:
+            return "입 움직임이 레퍼런스와 다릅니다."
+
+    def _generate_brow_feedback(self, score: float) -> str:
+        """눈썹 표현 서브메트릭 피드백."""
+        if score >= 80:
+            return "눈썹 표현이 감정을 잘 강조합니다."
+        elif score >= 60:
+            return "눈썹 표현이 대체로 좋지만 더 과감해도 좋습니다."
+        else:
+            return "눈썹 표현이 부족합니다. 감정에 따라 눈썹을 더 활용해보세요."
+
+    def _generate_expression_smart_feedback(
         self,
-        score: float,
-        frame_scores: list[float],
+        eye_score: float,
+        mouth_score: float,
+        brow_score: float,
         face_detection_rate: float,
     ) -> str:
-        """표정 점수에 대한 피드백 생성."""
-        grade = self._get_grade(score)
-        
+        """표정 스마트 피드백 - 가장 낮은 서브메트릭 기반."""
         if face_detection_rate < 0.8:
             return f"얼굴 인식률({face_detection_rate:.0%})이 낮습니다. 카메라를 정면으로 바라봐주세요."
         
-        if grade in (ScoreGrade.S, ScoreGrade.A):
-            return "표정 연기가 레퍼런스와 매우 유사합니다. 훌륭해요!"
-        elif grade == ScoreGrade.B:
-            return "표정이 대체로 잘 맞지만, 일부 표정을 더 과감하게 표현해보세요."
-        elif grade == ScoreGrade.C:
-            # 변화량 분석
-            score_std = np.std(frame_scores) if frame_scores else 0
-            if score_std < 0.1:
-                return "표정 변화가 적습니다. 감정에 따라 더 다양한 표정을 지어보세요."
-            return "표정을 레퍼런스 배우에 맞춰 연습해보세요."
-        else:
-            return "표정이 레퍼런스와 많이 다릅니다. 배우의 표정을 자세히 관찰해보세요."
+        # 모든 영역이 우수한 경우
+        if eye_score >= 80 and mouth_score >= 80 and brow_score >= 80:
+            return "모든 얼굴 영역에서 훌륭한 표현력을 보여주셨습니다!"
+        
+        # 가장 낮은 영역 찾기
+        scores = {"눈": eye_score, "입": mouth_score, "눈썹": brow_score}
+        weakest = min(scores, key=scores.get)
+        weakest_score = scores[weakest]
+        
+        # 높은 영역 찾기
+        strongest = max(scores, key=scores.get)
+        strongest_score = scores[strongest]
+        
+        # 특정 조합에 대한 스마트 피드백
+        if weakest == "눈" and weakest_score < 70:
+            if mouth_score >= 70:
+                return "대사 전달은 좋지만, 눈에 감정이 없어 보입니다. 눈 연기에 집중해보세요."
+            else:
+                return "표정 전체적으로 감정 표현이 부족합니다. 눈과 입 모두 더 과감하게 표현해보세요."
+        
+        if weakest == "눈썹" and weakest_score < 70:
+            if eye_score >= 70:
+                return "눈 표현은 좋지만, 눈썹 움직임이 부족합니다. 감정에 따라 눈썹을 더 활용해보세요."
+            else:
+                return "눈과 눈썹 표현을 더 과감하게 해보세요. 감정의 진정성이 느껴져야 합니다."
+        
+        if weakest == "입" and weakest_score < 70:
+            return "발음과 입 모양을 레퍼런스에 맞춰 연습해보세요."
+        
+        # 일반적인 피드백
+        return f"{weakest} 표현을 더 연습하면 전체 연기가 향상될 거예요."
 
-    def _generate_overall_feedback(
+    def _generate_overall_feedback_smart(
         self,
         total_score: float,
         pitch: ScoreDetail,
         energy: ScoreDetail,
         expression: ScoreDetail,
     ) -> str:
-        """종합 피드백 생성."""
+        """종합 스마트 피드백 생성."""
         grade = self._get_grade(total_score)
         
         # 가장 낮은 점수 항목 찾기
@@ -570,33 +887,56 @@ class ScoringService:
             "표정": expression.score,
         }
         weakest = min(scores, key=scores.get)
+        weakest_score = scores[weakest]
         strongest = max(scores, key=scores.get)
+        strongest_score = scores[strongest]
+
+        # 서브메트릭 레벨에서 가장 약한 부분 찾기
+        all_sub_metrics = []
+        for detail, category in [(pitch, "억양"), (energy, "볼륨"), (expression, "표정")]:
+            for sm in detail.sub_metrics:
+                all_sub_metrics.append({
+                    "category": category,
+                    "name": sm.name,
+                    "score": sm.score,
+                    "feedback": sm.feedback,
+                })
+        
+        weakest_sub = min(all_sub_metrics, key=lambda x: x["score"]) if all_sub_metrics else None
 
         if grade == ScoreGrade.S:
             return f"🎭 완벽한 연기입니다! 모든 항목에서 뛰어난 성과를 보여주셨어요."
         elif grade == ScoreGrade.A:
-            return f"🎭 훌륭한 연기입니다! {strongest}이(가) 특히 좋았어요."
+            return f"🎭 훌륭한 연기입니다! {strongest}이(가) 특히 인상적이에요."
         elif grade == ScoreGrade.B:
+            if weakest_sub:
+                return f"🎭 좋은 연기입니다! {weakest_sub['category']}의 {weakest_sub['name']}을(를) 보완하면 더 좋아질 거예요."
             return f"🎭 좋은 연기입니다! {weakest}을(를) 조금 더 연습하면 더 좋아질 거예요."
         elif grade == ScoreGrade.C:
+            if weakest_sub:
+                return f"🎭 괜찮은 시도입니다! Tip: {weakest_sub['feedback']}"
             return f"🎭 괜찮은 시도입니다! {weakest}에 집중해서 연습해보세요."
         elif grade == ScoreGrade.D:
             return f"🎭 조금 더 노력이 필요해요. 레퍼런스 영상을 다시 보면서 {weakest}을(를) 연습해보세요."
         else:
             return f"🎭 레퍼런스 영상을 천천히 분석하고, 하나씩 따라해보세요. 연습하면 반드시 늘어요!"
 
+    # =========================================================================
+    # 빈 결과 및 프레임 점수 계산
+    # =========================================================================
+
     def _empty_result(self, dtw_result: DTWResult) -> ScoringResult:
         """빈 결과 반환."""
         return ScoringResult(
             total_score=0.0,
             audio_pitch_score=ScoreDetail(
-                score=0.0, weight=self.weight_pitch, feedback="데이터 부족"
+                score=0.0, weight=self.weight_pitch, feedback="데이터 부족", sub_metrics=[]
             ),
             audio_energy_score=ScoreDetail(
-                score=0.0, weight=self.weight_energy, feedback="데이터 부족"
+                score=0.0, weight=self.weight_energy, feedback="데이터 부족", sub_metrics=[]
             ),
             video_expression_score=ScoreDetail(
-                score=0.0, weight=self.weight_expression, feedback="데이터 부족"
+                score=0.0, weight=self.weight_expression, feedback="데이터 부족", sub_metrics=[]
             ),
             dtw_result=dtw_result,
             overall_feedback="분석할 데이터가 부족합니다.",
@@ -707,26 +1047,38 @@ if __name__ == "__main__":
     )
 
     # 스코어링
-    print("\n📊 스코어링 중...")
+    print("\n📊 스코어링 중 (Ultra-Precision)...")
     scoring_service = get_scoring_service()
     result = scoring_service.score(user_analysis, reference, dtw_result)
 
     # 결과 출력
-    print("\n" + "=" * 60)
-    print("🎭 연기 평가 결과")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("🎭 연기 평가 결과 (Ultra-Precision Feedback)")
+    print("=" * 70)
     
     grade = ScoringService._get_grade(result.total_score)
     print(f"\n  📊 종합 점수: {result.total_score:.1f}/100 (등급: {grade.value})")
     
+    # 피치 상세
     print(f"\n  🎤 억양 (피치): {result.audio_pitch_score.score:.1f}/100")
     print(f"     → {result.audio_pitch_score.feedback}")
+    for sm in result.audio_pitch_score.sub_metrics:
+        print(f"       • {sm.name}: {sm.score:.1f}/100 ({sm.weight:.0%})")
+        print(f"         {sm.feedback}")
     
+    # 에너지 상세
     print(f"\n  🔊 볼륨 (에너지): {result.audio_energy_score.score:.1f}/100")
     print(f"     → {result.audio_energy_score.feedback}")
+    for sm in result.audio_energy_score.sub_metrics:
+        print(f"       • {sm.name}: {sm.score:.1f}/100 ({sm.weight:.0%})")
+        print(f"         {sm.feedback}")
     
+    # 표정 상세
     print(f"\n  😀 표정: {result.video_expression_score.score:.1f}/100")
     print(f"     → {result.video_expression_score.feedback}")
+    for sm in result.video_expression_score.sub_metrics:
+        print(f"       • {sm.name}: {sm.score:.1f}/100 ({sm.weight:.0%})")
+        print(f"         {sm.feedback}")
     
     print(f"\n  💬 종합 피드백:")
     print(f"     {result.overall_feedback}")

@@ -426,11 +426,21 @@ class DTWResult(BaseModel):
 # 스코어링 결과 스키마
 # =============================================================================
 
+class SubMetric(BaseModel):
+    """서브메트릭 상세 (Ultra-Precision Feedback 용)."""
+    name: str = Field(description="서브메트릭 이름")
+    score: float = Field(ge=0.0, le=100.0, description="점수 (0-100)")
+    weight: float = Field(ge=0.0, le=1.0, description="가중치 (0-1)")
+    feedback: str = Field(default="", description="서브메트릭별 피드백")
+    details: dict = Field(default_factory=dict, description="추가 세부 정보")
+
+
 class ScoreDetail(BaseModel):
     """개별 스코어 상세."""
     score: float = Field(ge=0.0, le=100.0, description="점수 (0-100)")
     weight: float = Field(default=1.0, ge=0.0, description="가중치")
     feedback: str = Field(default="", description="피드백 메시지")
+    sub_metrics: list[SubMetric] = Field(default_factory=list, description="서브메트릭 리스트")
 
 
 class ScoringResult(BaseModel):

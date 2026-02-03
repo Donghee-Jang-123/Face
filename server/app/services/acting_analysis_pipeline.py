@@ -475,27 +475,43 @@ def get_acting_pipeline() -> ActingAnalysisPipeline:
 # API 응답용 헬퍼 함수
 # =============================================================================
 
+def _score_detail_to_dict(detail) -> dict:
+    """ScoreDetail을 딕셔너리로 변환 (서브메트릭 포함)."""
+    if not detail:
+        return {
+            "score": 0,
+            "feedback": "",
+            "weight": 0,
+            "sub_metrics": [],
+        }
+    
+    sub_metrics = []
+    for sm in detail.sub_metrics:
+        sub_metrics.append({
+            "name": sm.name,
+            "score": sm.score,
+            "weight": sm.weight,
+            "feedback": sm.feedback,
+            "details": sm.details,
+        })
+    
+    return {
+        "score": detail.score,
+        "feedback": detail.feedback,
+        "weight": detail.weight,
+        "sub_metrics": sub_metrics,
+    }
+
+
 def scoring_result_to_dict(result: ScoringResult) -> dict:
-    """ScoringResult를 API 응답용 딕셔너리로 변환."""
+    """ScoringResult를 API 응답용 딕셔너리로 변환 (Ultra-Precision 서브메트릭 포함)."""
     return {
         "total_score": result.total_score,
         "grade": _score_to_grade(result.total_score),
         "details": {
-            "pitch": {
-                "score": result.audio_pitch_score.score if result.audio_pitch_score else 0,
-                "feedback": result.audio_pitch_score.feedback if result.audio_pitch_score else "",
-                "weight": result.audio_pitch_score.weight if result.audio_pitch_score else 0,
-            },
-            "energy": {
-                "score": result.audio_energy_score.score if result.audio_energy_score else 0,
-                "feedback": result.audio_energy_score.feedback if result.audio_energy_score else "",
-                "weight": result.audio_energy_score.weight if result.audio_energy_score else 0,
-            },
-            "expression": {
-                "score": result.video_expression_score.score if result.video_expression_score else 0,
-                "feedback": result.video_expression_score.feedback if result.video_expression_score else "",
-                "weight": result.video_expression_score.weight if result.video_expression_score else 0,
-            },
+            "pitch": _score_detail_to_dict(result.audio_pitch_score),
+            "energy": _score_detail_to_dict(result.audio_energy_score),
+            "expression": _score_detail_to_dict(result.video_expression_score),
         },
         "overall_feedback": result.overall_feedback,
     }
