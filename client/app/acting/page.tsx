@@ -219,6 +219,15 @@ function RadarChart({ pitch, energy, expression, size = 180 }: RadarChartProps) 
   );
 }
 
+// 선택된 비디오 타입 정의
+interface SelectedVideo {
+  video_id: string;
+  actor_id: string;
+  title: string;
+  video_url: string;
+  thumbnail?: string;
+}
+
 export default function ActingPage() {
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -246,8 +255,26 @@ export default function ActingPage() {
     expression: true,
   });
 
-  // 참조 비디오 URL (서버 assets 폴더에서 제공)
-  const referenceVideoUrl = 'http://127.0.0.1:8000/assets/어이가없네.mp4';
+  // 선택된 비디오 상태
+  const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
+
+  // localStorage에서 선택된 비디오 불러오기
+  useEffect(() => {
+    const storedVideo = localStorage.getItem('selected_video');
+    if (storedVideo) {
+      try {
+        const video = JSON.parse(storedVideo) as SelectedVideo;
+        setSelectedVideo(video);
+      } catch (error) {
+        console.error('선택된 비디오 파싱 오류:', error);
+      }
+    }
+  }, []);
+
+  // 참조 비디오 URL (선택된 비디오가 있을 때만 사용)
+  const referenceVideoUrl = selectedVideo 
+    ? `http://127.0.0.1:8000${selectedVideo.video_url}`
+    : null;
 
   // 카메라 초기화 함수
   const initCamera = useCallback(async () => {
@@ -388,8 +415,9 @@ export default function ActingPage() {
       const formData = new FormData();
       formData.append('file', blob, 'my_acting.webm');
       
-      // actor_id 추가
-      const filename = referenceVideoUrl.split('/').pop() || '어이가없네.mp4';
+      // actor_id 추가 (선택된 비디오의 video_url에서 파일명 추출)
+      const videoUrl = selectedVideo?.video_url || '/assets/videos/어이가없네.mp4';
+      const filename = videoUrl.split('/').pop() || '어이가없네.mp4';
       const actorId = filename
         .replace(/\.[^/.]+$/, '')
         .replace(/\s+/g, '_')
@@ -428,7 +456,7 @@ export default function ActingPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [recordedChunks, referenceVideoUrl]);
+  }, [recordedChunks, selectedVideo]);
 
   // 카테고리 펼침/접기 토글
   const toggleCategory = (category: string) => {
@@ -791,25 +819,35 @@ export default function ActingPage() {
             참조 영상
           </h2>
           <div className="flex-1 relative bg-black rounded-lg overflow-hidden flex items-center justify-center">
-            <video
-              ref={referenceVideoRef}
-              src={referenceVideoUrl}
-              controls
-              className="w-full h-full object-contain"
-              controlsList="nodownload"
-            >
-              <source src={referenceVideoUrl} type="video/mp4" />
-              브라우저가 비디오 재생을 지원하지 않습니다.
-            </video>
+            {referenceVideoUrl ? (
+              <video
+                ref={referenceVideoRef}
+                src={referenceVideoUrl}
+                controls
+                className="w-full h-full object-contain"
+                controlsList="nodownload"
+              >
+                <source src={referenceVideoUrl} type="video/mp4" />
+                브라우저가 비디오 재생을 지원하지 않습니다.
+              </video>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <p className="text-lg font-medium">선택된 영상이 없습니다</p>
+                <p className="text-sm mt-2">배우 추천 페이지에서 영상을 선택해주세요</p>
+              </div>
+            )}
           </div>
           
           {/* 비디오 정보 */}
           <div className="mt-4 p-3 bg-gray-800 rounded-lg">
             <p className="text-gray-300 text-sm">
-              <span className="font-medium text-white">현재 영상:</span> 어이가없네.mp4
+              <span className="font-medium text-white">현재 영상:</span> {selectedVideo?.title || '선택된 영상 없음'}
             </p>
             <p className="text-gray-500 text-xs mt-1">
-              영상을 보면서 따라해보세요!
+              {selectedVideo ? '영상을 보면서 따라해보세요!' : '배우 추천 페이지에서 영상을 선택해주세요'}
             </p>
           </div>
         </div>

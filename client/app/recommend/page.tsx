@@ -200,15 +200,12 @@ export default function RecommendPage() {
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-none w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shadow-sm">
-                  {video.actor_id.replace('actor_', '')}
-                </div>
                 <div className="flex-col overflow-hidden">
                   <h4 className="text-white font-semibold text-sm leading-tight mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors">
                     {video.title}
                   </h4>
                   <p className="text-gray-400 text-xs">
-                    {video.actor_id} • 조회수 1.2만회
+                    {video.actor_id}
                   </p>
                 </div>
               </div>
