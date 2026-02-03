@@ -108,7 +108,7 @@ class VectorStore:
         """
         if not self.actor_embeddings:
             # 데이터가 없으면 에러 방지를 위해 기본값 반환
-            return "actor_03" 
+            return "actor_03", 0.0
 
         best_actor_id = None
         best_score = -1.0
@@ -133,7 +133,7 @@ class VectorStore:
                 best_actor_id = actor_id
         
         print(f"🧐 닮은꼴 분석 결과: {best_actor_id} (유사도: {best_score:.4f})")
-        return best_actor_id
+        return best_actor_id, float(best_score)
 
     def _save(self):
         """데이터 저장 (기존 기능 유지)"""

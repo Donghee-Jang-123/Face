@@ -16,6 +16,7 @@ interface AuthResponse {
   nickname?: string;
   score?: number;
   recommended_actor_id?: string;
+  recommended_actor_score?: number;
 }
 
 export default function Home() {
@@ -245,6 +246,7 @@ export default function Home() {
         localStorage.setItem('user', JSON.stringify({
           nickname: data.nickname,
           recommended_actor_id: data.recommended_actor_id,
+          recommended_actor_score: data.recommended_actor_score,
           loginTime: new Date().toISOString(),
         }));
 
