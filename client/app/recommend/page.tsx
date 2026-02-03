@@ -99,7 +99,12 @@ export default function RecommendPage() {
       return;
     }
 
-    setMatchRate(Math.floor(Math.random() * (98 - 85 + 1)) + 85);
+    if (typeof userData.recommended_actor_score === 'number') {
+      const raw = Math.max(0, Math.min(1, userData.recommended_actor_score));
+      setMatchRate(Math.round(raw * 100));
+    } else {
+      setMatchRate(Math.floor(Math.random() * (98 - 85 + 1)) + 85);
+    }
 
     const fetchData = async () => {
       try {

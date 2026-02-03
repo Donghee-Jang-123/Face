@@ -1,23 +1,5 @@
 [
   {
-    "actor_id": "actor_01",
-    "name": "한소희",
-    "thumbnail": "/assets/actors/한소희.png",
-    "description": "세련되고 강렬한 연기"
-  },
-  {
-    "actor_id": "actor_02",
-    "name": "송강",
-    "thumbnail": "/assets/actors/송강.png",
-    "description": "섬세한 감정 표현"
-  },
-  {
-    "actor_id": "actor_03",
-    "name": "유아인",
-    "thumbnail": "/assets/actors/유아인.png",
-    "description": "독보적인 개성과 폭발적인 감정 스펙트럼"
-  },
-  {
     "actor_id": "actor_04",
     "name": "고윤정",
     "thumbnail": "/assets/actors/고윤정.png",
@@ -30,10 +12,58 @@
     "description": "자연스러운 생활 연기와 깊은 감성"
   },
   {
+    "actor_id": "actor_09",
+    "name": "김우빈",
+    "thumbnail": "/assets/actors/김우빈.png",
+    "description": "강렬한 눈빛과 묵직한 카리스마"
+  },
+  {
     "actor_id": "actor_06",
     "name": "김지원",
     "thumbnail": "/assets/actors/김지원.png",
     "description": "정확한 딕션과 넓은 연기 스펙트럼"
+  },
+  {
+    "actor_id": "actor_08",
+    "name": "김히어라",
+    "thumbnail": "/assets/actors/김히어라.png",
+    "description": "뮤지컬로 다져진 탄탄한 발성과 카리스마"
+  },
+  {
+    "actor_id": "actor_10",
+    "name": "류준열",
+    "thumbnail": "/assets/actors/류준열.png",
+    "description": "현실적인 감정 연기와 자연스러운 톤"
+  },
+  {
+    "actor_id": "actor_11",
+    "name": "마동석",
+    "thumbnail": "/assets/actors/마동석.png",
+    "description": "강한 존재감과 파워풀한 액션 연기"
+  },
+  {
+    "actor_id": "actor_12",
+    "name": "박정민",
+    "thumbnail": "/assets/actors/박정민.png",
+    "description": "섬세한 내면 연기와 캐릭터 소화력"
+  },
+  {
+    "actor_id": "actor_13",
+    "name": "손석구",
+    "thumbnail": "/assets/actors/손석구.png",
+    "description": "담백하지만 깊은 감정선"
+  },
+  {
+    "actor_id": "actor_14",
+    "name": "송강호",
+    "thumbnail": "/assets/actors/송강호.png",
+    "description": "압도적 몰입감과 리얼리즘 연기"
+  },
+  {
+    "actor_id": "actor_15",
+    "name": "송중기",
+    "thumbnail": "/assets/actors/송중기.png",
+    "description": "부드러운 멜로와 액션의 균형"
   },
   {
     "actor_id": "actor_07",
@@ -42,11 +72,39 @@
     "description": "우아함 속에 감춰진 단단한 내면 연기"
   },
   {
-    "actor_id": "actor_08",
-    "name": "김히어라",
-    "thumbnail": "/assets/actors/김히어라.png",
-    "description": "뮤지컬로 다져진 탄탄한 발성과 카리스마"
+    "actor_id": "actor_03",
+    "name": "유아인",
+    "thumbnail": "/assets/actors/유아인.png",
+    "description": "독보적인 개성과 폭발적인 감정 스펙트럼"
+  },
+  {
+    "actor_id": "actor_16",
+    "name": "이병헌",
+    "thumbnail": "/assets/actors/이병헌.png",
+    "description": "깊이 있는 감정 폭발과 카리스마"
+  },
+  {
+    "actor_id": "actor_17",
+    "name": "이정재",
+    "thumbnail": "/assets/actors/이정재.png",
+    "description": "절제된 카리스마와 긴장감"
+  },
+  {
+    "actor_id": "actor_18",
+    "name": "주지훈",
+    "thumbnail": "/assets/actors/주지훈.png",
+    "description": "다크한 분위기와 강한 존재감"
+  },
+  {
+    "actor_id": "actor_01",
+    "name": "한소희",
+    "thumbnail": "/assets/actors/한소희.png",
+    "description": "세련되고 강렬한 연기"
+  },
+  {
+    "actor_id": "actor_19",
+    "name": "혜리",
+    "thumbnail": "/assets/actors/혜리.png",
+    "description": "밝고 친근한 감정 표현"
   }
-  
-  
 ]
