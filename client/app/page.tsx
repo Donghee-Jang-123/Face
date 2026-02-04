@@ -107,10 +107,12 @@ export default function Home() {
 
   // 스트림이 변경되면 비디오 엘리먼트에 연결
   useEffect(() => {
-    if (videoRef.current && stream) {
+    if (videoRef.current && stream && !capturedImage) {
       videoRef.current.srcObject = stream;
+      // ?? ?????? ??? ? ??
+      videoRef.current.play().catch(() => {});
     }
-  }, [stream]);
+  }, [stream, capturedImage]);
 
   // 컴포넌트 언마운트 시 카메라 정리
   useEffect(() => {

@@ -2,7 +2,8 @@ import faiss
 import numpy as np
 import os
 import json
-import pickle  # [New] 배우 데이터(.pkl)를 읽기 위해 추가
+import pickle
+import math  # [New] 배우 데이터(.pkl)를 읽기 위해 추가
 
 # 데이터 저장 경로
 DB_DIR = "app/database"
@@ -132,8 +133,15 @@ class VectorStore:
                 best_score = score
                 best_actor_id = actor_id
         
-        print(f"🧐 닮은꼴 분석 결과: {best_actor_id} (유사도: {best_score:.4f})")
-        return best_actor_id, float(best_score)
+        # Sigmoid Calibration (UX ??)
+        # ?? ??(?? 0.17~0.23)? ?? ?? ??? ????
+        # ???(x0)? ???(k)? ??? ?? ??
+        k = 20.0
+        x0 = 0.20
+        calibrated = 1.0 / (1.0 + math.exp(-(best_score - x0) * k))
+
+        print(f"?? ??? ?? ??: {best_actor_id} (raw {best_score:.4f}, cal {calibrated:.4f})")
+        return best_actor_id, float(calibrated)
 
     def _save(self):
         """데이터 저장 (기존 기능 유지)"""
