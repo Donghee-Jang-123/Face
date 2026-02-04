@@ -307,6 +307,7 @@ export default function ActingPage() {
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const referenceVideoRef = useRef<HTMLVideoElement>(null);
+  const recordedVideoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   
   // 상태 관리
@@ -317,12 +318,16 @@ export default function ActingPage() {
   // 녹화 관련 상태
   const [isRecording, setIsRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null); // 서버 전송 후 재생용
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string } | null>(null);
   
   // 녹화 시간 트래킹 (자막 싱크용)
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [recordingElapsedTime, setRecordingElapsedTime] = useState(0);
+
+  // 녹화 전 카운트다운 (3, 2, 1) — 카운트 중에는 MediaRecorder 미시작, 서버 전송 영상에 미포함
+  const [countdown, setCountdown] = useState<number | null>(null);
   
   // 분석 결과 상태
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -339,6 +344,14 @@ export default function ActingPage() {
 
   // 레퍼런스 비디오 현재 재생 시간 (카라오케 싱크용)
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+
+  // 연기 영상 재생 URL 정리 (언마운트 또는 URL 변경 시 revoke)
+  useEffect(() => {
+    const url = recordedVideoUrl;
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [recordedVideoUrl]);
 
   // localStorage에서 선택된 비디오 불러오기
   useEffect(() => {
@@ -428,12 +441,13 @@ export default function ActingPage() {
     };
   }, [initCamera]);
 
-  // 스트림이 변경되면 비디오 엘리먼트에 연결
+  // 스트림이 변경되거나 웹캠 화면으로 돌아오면 비디오 엘리먼트에 연결
   useEffect(() => {
+    if (recordedVideoUrl) return; // 연기 영상 재생 중에는 웹캠 video에 스트림 붙이지 않음
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, recordedVideoUrl]);
 
   // 녹화 데이터 수집 핸들러
   const handleDataAvailable = useCallback((event: BlobEvent) => {
@@ -442,37 +456,51 @@ export default function ActingPage() {
     }
   }, []);
 
-  // 녹화 시작
-  const handleStartRecording = useCallback(() => {
+  // 실제 녹화 시작 (카운트다운 종료 후 호출 — 서버 전송 영상에만 포함됨)
+  const startActualRecording = useCallback(() => {
     if (!stream) return;
-
-    setRecordedChunks([]);
-    setUploadResult(null);
-    setIsRecording(true);
-    
-    // 녹화 시간 트래킹 시작
     setRecordingStartTime(Date.now());
     setRecordingElapsedTime(0);
-
     try {
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'video/webm;codecs=vp9,opus'
       });
-
       mediaRecorder.ondataavailable = handleDataAvailable;
       mediaRecorder.onstop = () => {
-        console.log('녹화 완료, 데이터 청크 수:', recordedChunks.length);
+        console.log('녹화 완료');
       };
-
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start(1000); // 1초마다 데이터 청크 생성
+      setIsRecording(true);
       console.log('녹화 시작!');
     } catch (error) {
       console.error('MediaRecorder 생성 실패:', error);
-      setIsRecording(false);
       setRecordingStartTime(null);
     }
-  }, [stream, handleDataAvailable, recordedChunks.length]);
+  }, [stream, handleDataAvailable]);
+
+  // 카운트다운 (3 → 2 → 1 → 실제 녹화 시작)
+  useEffect(() => {
+    if (countdown === null) return;
+    const t = setTimeout(() => {
+      if (countdown > 1) {
+        setCountdown(countdown - 1);
+      } else {
+        setCountdown(null);
+        startActualRecording();
+      }
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [countdown, startActualRecording]);
+
+  // 녹화 시작 버튼 클릭: 카운트다운만 시작 (즉시 녹화하지 않음)
+  const handleStartRecording = useCallback(() => {
+    if (!stream) return;
+    setRecordedChunks([]);
+    setRecordedVideoUrl(null);
+    setUploadResult(null);
+    setCountdown(3);
+  }, [stream]);
 
   // 녹화 종료
   const handleStopRecording = useCallback(() => {
@@ -511,7 +539,10 @@ export default function ActingPage() {
     try {
       // Blob 생성
       const blob = new Blob(recordedChunks, { type: 'video/webm' });
-      
+      // 왼쪽 패널에 내 연기 영상 재생용 URL 설정
+      const replayUrl = URL.createObjectURL(blob);
+      setRecordedVideoUrl(replayUrl);
+
       // FormData 생성
       const formData = new FormData();
       formData.append('file', blob, 'my_acting.webm');
@@ -808,13 +839,26 @@ export default function ActingPage() {
     <div className="min-h-screen w-screen bg-gray-900 overflow-y-auto">
       {/* 상단: 비디오 영역 */}
       <div className="flex h-[70vh] w-full">
-        {/* 왼쪽: 웹캠 피드 */}
+        {/* 왼쪽: 웹캠 피드 또는 내 연기 영상 재생 */}
         <div className="w-1/2 h-full p-4 flex flex-col">
           <h2 className="text-xl font-bold text-white mb-4 text-center">
-            내 모습 (웹캠)
+            {recordedVideoUrl ? '내 연기 영상' : '내 모습 (웹캠)'}
           </h2>
           <div className="flex-1 relative bg-black rounded-lg overflow-hidden">
-            {isCameraLoading ? (
+            {recordedVideoUrl ? (
+              /* 서버 전송 후: 녹화한 연기 영상 재생 플레이어 (key로 웹캠 video와 별도 DOM 유지) */
+              <video
+                key="recorded-acting"
+                ref={recordedVideoRef}
+                src={recordedVideoUrl}
+                controls
+                playsInline
+                className="w-full h-full object-contain"
+                preload="auto"
+              >
+                브라우저가 비디오 재생을 지원하지 않습니다.
+              </video>
+            ) : isCameraLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
@@ -825,6 +869,7 @@ export default function ActingPage() {
               renderCameraError()
             ) : (
               <video
+                key="webcam-live"
                 ref={videoRef}
                 autoPlay
                 playsInline
@@ -834,22 +879,34 @@ export default function ActingPage() {
               />
             )}
             
+            {/* 카운트다운 오버레이 (녹화 전 3, 2, 1 + 안내 문구) */}
+            {!recordedVideoUrl && countdown !== null && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-10">
+                <p className="text-white/90 text-[40px] mb-4 text-center px-4">
+                  카메라를 응시하고 연기해주세요.
+                </p>
+                <span className="text-7xl md:text-8xl font-bold text-white drop-shadow-lg tabular-nums">
+                  {countdown}
+                </span>
+              </div>
+            )}
+
             {/* 자막 오버레이 (녹화 중일 때만 웹캠 위에 표시) */}
-            {isRecording && selectedVideo?.sentences && selectedVideo.sentences.length > 0 && (
+            {!recordedVideoUrl && isRecording && selectedVideo?.sentences && selectedVideo.sentences.length > 0 && (
               <SubtitleOverlay 
                 sentences={selectedVideo.sentences} 
                 currentTime={recordingElapsedTime}
               />
             )}
             
-            {/* 상태 표시 (LIVE / REC) */}
-            {!cameraError && !isCameraLoading && (
-              <div className={`absolute top-4 left-4 flex items-center gap-2 px-3 py-1 rounded-full ${
-                isRecording ? 'bg-red-600' : 'bg-green-600'
+            {/* 상태 표시 (LIVE / REC) - 웹캠 모드일 때만 */}
+            {!recordedVideoUrl && !cameraError && !isCameraLoading && (
+              <div className={`absolute top-4 left-4 flex items-center gap-2 px-3 py-1 rounded-full z-20 ${
+                countdown !== null ? 'bg-amber-600' : isRecording ? 'bg-red-600' : 'bg-green-600'
               }`}>
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium text-white">
-                  {isRecording ? 'REC' : 'LIVE'}
+                  {countdown !== null ? '준비' : isRecording ? 'REC' : 'LIVE'}
                 </span>
               </div>
             )}
@@ -871,17 +928,26 @@ export default function ActingPage() {
               ) : (
                 <button
                   onClick={handleStartRecording}
-                  disabled={!stream || isCameraLoading || !!cameraError}
+                  disabled={!stream || isCameraLoading || !!cameraError || countdown !== null}
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors shadow-lg ${
-                    !stream || isCameraLoading || cameraError
+                    !stream || isCameraLoading || cameraError || countdown !== null
                       ? 'bg-gray-600 cursor-not-allowed text-gray-400'
                       : 'bg-red-600 hover:bg-red-700 text-white'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="8" />
-                  </svg>
-                  녹화 시작
+                  {countdown !== null ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      준비 중...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8" />
+                      </svg>
+                      녹화 시작
+                    </>
+                  )}
                 </button>
               )}
 
@@ -1142,7 +1208,7 @@ export default function ActingPage() {
               <span className="text-purple-400 font-medium"> 억양, 볼륨, 표정</span>에 대한 
               세밀한 분석 결과를 확인할 수 있습니다.
             </p>
-            <div className="flex justify-center gap-6 text-xs text-gray-600">
+            <div className="flex justify-center gap-6 text-xs text-gray-600 flex-wrap">
               <span>🎵 패턴 매칭</span>
               <span>📊 다이내믹 레인지</span>
               <span>👁️ 눈 표현</span>

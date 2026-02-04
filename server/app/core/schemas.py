@@ -63,6 +63,15 @@ class Blendshapes(BaseModel):
     noseSneerLeft: float = Field(default=0.0, ge=0.0, le=1.0, description="왼쪽 코 찡그림")
     noseSneerRight: float = Field(default=0.0, ge=0.0, le=1.0, description="오른쪽 코 찡그림")
 
+    # 머리 포즈 (3D 좌표 기반 입체 분석)
+    headPitch: float = Field(default=0.0, ge=-1.0, le=1.0, description="머리 상하 기울기 (위: +, 아래: -)")
+    headYaw: float = Field(default=0.0, ge=-1.0, le=1.0, description="머리 좌우 회전 (왼쪽: +, 오른쪽: -)")
+    headRoll: float = Field(default=0.0, ge=-1.0, le=1.0, description="머리 좌우 기울임 (왼쪽: +, 오른쪽: -)")
+
+    # 깊이 기반 표정 (z 좌표 활용)
+    facePush: float = Field(default=0.0, ge=0.0, le=1.0, description="얼굴 전방 돌출 정도")
+    chinForward: float = Field(default=0.0, ge=0.0, le=1.0, description="턱 전방 돌출 정도")
+
     model_config = {
         "extra": "ignore",  # 알 수 없는 필드 무시
         "validate_assignment": True,
@@ -81,6 +90,9 @@ class Blendshapes(BaseModel):
             self.eyeSquintLeft, self.eyeSquintRight,
             self.eyeBlinkLeft, self.eyeBlinkRight,
             self.cheekPuff, self.noseSneerLeft, self.noseSneerRight,
+            # 3D 좌표 기반 추가 특성
+            self.headPitch, self.headYaw, self.headRoll,
+            self.facePush, self.chinForward,
         ]
 
     @classmethod
@@ -97,8 +109,13 @@ class Blendshapes(BaseModel):
             "eyeSquintLeft", "eyeSquintRight",
             "eyeBlinkLeft", "eyeBlinkRight",
             "cheekPuff", "noseSneerLeft", "noseSneerRight",
+            # 3D 좌표 기반 추가 특성
+            "headPitch", "headYaw", "headRoll",
+            "facePush", "chinForward",
         ]
-        return cls(**dict(zip(keys, vector)))
+        # 이전 버전 호환성: 벡터 길이가 짧으면 기본값 사용
+        padded_vector = list(vector) + [0.0] * (len(keys) - len(vector))
+        return cls(**dict(zip(keys, padded_vector[:len(keys)])))
 
 
 # =============================================================================
@@ -375,7 +392,7 @@ class AnalysisResult(BaseModel):
             if f.video and f.video.blendshapes:
                 result.append(f.video.blendshapes.to_vector())
             else:
-                result.append([0.0] * 22)  # 22개 블렌드쉐입
+                result.append([0.0] * 27)  # 27개 블렌드쉐입 (3D 포즈 포함)
         return result
 
     @property

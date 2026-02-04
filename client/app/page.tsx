@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
 
 // 카메라 에러 타입 정의
 type CameraError = 'permission_denied' | 'not_found' | 'not_supported' | 'unknown' | null;
@@ -25,6 +26,9 @@ export default function Home() {
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const faceMeshCanvasRef = useRef<HTMLCanvasElement>(null);
+  const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   
   // 상태 관리
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -105,12 +109,19 @@ export default function Home() {
     }
   }, [stream]);
 
-  // 스트림이 변경되면 비디오 엘리먼트에 연결
+  // 스트림이 변경되면 비디오 엘리먼트에 연결 (모드 전환 시 video 엘리먼트가 바뀌므로 authMode 포함)
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, authMode]);
+
+  // 메인 화면(idle)에서 카메라 자동 시작 (배경 Face Mesh용)
+  useEffect(() => {
+    if (authMode === 'idle' && !stream) {
+      initCamera();
+    }
+  }, [authMode, stream, initCamera]);
 
   // 컴포넌트 언마운트 시 카메라 정리
   useEffect(() => {
@@ -121,6 +132,120 @@ export default function Home() {
     };
   }, [stream]);
 
+  // MediaPipe Face Landmarker 초기화 (메인 화면 배경용 - idle 모드에서만)
+  useEffect(() => {
+    if (authMode !== 'idle' || !stream) return;
+
+    let cancelled = false;
+    const initFaceLandmarker = async () => {
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        );
+        if (cancelled) return;
+
+        const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+          },
+          runningMode: 'VIDEO',
+          numFaces: 1,
+        });
+
+        if (cancelled) return;
+        faceLandmarkerRef.current = faceLandmarker;
+      } catch (err) {
+        console.error('Face Landmarker 초기화 실패:', err);
+      }
+    };
+
+    initFaceLandmarker();
+    return () => {
+      cancelled = true;
+      faceLandmarkerRef.current = null;
+    };
+  }, [authMode, stream]);
+
+  // Face Mesh 점 그리기 루프 (메인 화면 배경 - idle 모드에서만)
+  useEffect(() => {
+    if (authMode !== 'idle') return;
+
+    const video = videoRef.current;
+    const canvas = faceMeshCanvasRef.current;
+    if (!video || !canvas || !stream) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let lastVideoTime = -1;
+
+    const drawLandmarks = () => {
+      if (!video.videoWidth || !video.videoHeight) {
+        animationFrameRef.current = requestAnimationFrame(drawLandmarks);
+        return;
+      }
+
+      // 캔버스 크기 설정 (비디오와 동일)
+      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+
+      const faceLandmarker = faceLandmarkerRef.current;
+      if (faceLandmarker) {
+        if (video.currentTime !== lastVideoTime) {
+          try {
+            const result = faceLandmarker.detectForVideo(video, performance.now());
+
+            // 배경 그라데이션 (얼굴 안 보임)
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#1e1b4b');   // indigo-950
+            gradient.addColorStop(0.5, '#111827'); // gray-900
+            gradient.addColorStop(1, '#3b0764');   // purple-950
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (result.faceLandmarks && result.faceLandmarks.length > 0) {
+              const landmarks = result.faceLandmarks[0];
+              ctx.fillStyle = '#60a5fa';
+
+              landmarks.forEach((lm) => {
+                // 거울 모드: x 좌표 반전
+                const x = (1 - lm.x) * canvas.width;
+                const y = lm.y * canvas.height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+              });
+            }
+          } catch (e) {
+            // 프레임 처리 실패 시 무시
+          }
+          lastVideoTime = video.currentTime;
+        }
+      } else {
+        // Face Landmarker 로딩 중: 그라데이션 배경
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#1e1b4b');   // indigo-950
+        gradient.addColorStop(0.5, '#111827');
+        gradient.addColorStop(1, '#3b0764');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      animationFrameRef.current = requestAnimationFrame(drawLandmarks);
+    };
+
+    drawLandmarks();
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [authMode, stream]);
+
   // 인증 모드 변경 핸들러
   const handleModeChange = useCallback((mode: AuthMode) => {
     setAuthMode(mode);
@@ -129,12 +254,11 @@ export default function Home() {
     setSuccessMessage(null);
     setNickname('');
     
-    if (mode !== 'idle') {
+    // 카메라가 없을 때만 초기화 (모드 전환 시 기존 스트림 유지)
+    if (!stream) {
       initCamera();
-    } else {
-      stopCamera();
     }
-  }, [initCamera, stopCamera]);
+  }, [initCamera, stream]);
 
   // 사진 촬영 함수
   const capturePhoto = useCallback(() => {
@@ -312,26 +436,47 @@ export default function Home() {
     );
   };
 
-  // 메인 화면 (idle 모드)
+  // 메인 화면 (idle 모드) - 배경에 Face Mesh 점
   if (authMode === 'idle') {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-        {/* 히든 캔버스 */}
+      <main className="relative flex min-h-screen flex-col items-center justify-center p-6 overflow-hidden">
+        {/* 히든 캔버스 (캡처용) */}
         <canvas ref={canvasRef} className="hidden" />
+
+        {/* 배경: Face Mesh 점 (얼굴 안 보이고 점만) */}
+        <div className="fixed inset-0 z-0">
+          {!cameraError && stream ? (
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover invisible"
+                style={{ transform: 'scaleX(-1)' }}
+                aria-hidden
+              />
+              <canvas
+                ref={faceMeshCanvasRef}
+                className="absolute inset-0 w-full h-full object-cover"
+                aria-label="얼굴 랜드마크"
+              />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-gray-900 to-purple-950" />
+          )}
+        </div>
         
+        {/* 전경 콘텐츠 */}
+        <div className="relative z-10 flex flex-col items-center">
         {/* 로고/타이틀 영역 */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-2xl">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Face Acting
+          
+          <h1 className="text-[120px] font-bold text-white">
+            FaceAct
           </h1>
-          <p className="text-lg text-gray-400 max-w-md">
-            얼굴 인식 기반의 실시간 표정 분석 서비스
+          <p className="text-[25px] text-gray-400 max-w-2xl">
+            얼굴 인식 기반의 실시간 연기 분석 서비스
           </p>
         </div>
 
@@ -352,8 +497,9 @@ export default function Home() {
         </div>
 
         {/* 하단 설명 */}
-        <div className="mt-12 text-center text-gray-500 text-sm max-w-md">
-          <p>얼굴을 웹캠으로 등록하고, 얼굴 인식으로 간편하게 로그인하세요.</p>
+        <div className="mt-12 text-center text-gray-500 text-sm max-w-2xl">
+          <p>회원가입하고, 페이스ID로 간편하게 로그인하세요.</p>
+        </div>
         </div>
       </main>
     );
@@ -361,7 +507,7 @@ export default function Home() {
 
   // 로그인/회원가입 모드
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-gray-900 to-purple-950 p-4 md:p-6">
       {/* 히든 캔버스 */}
       <canvas ref={canvasRef} className="hidden" />
       

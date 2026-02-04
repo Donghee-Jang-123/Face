@@ -407,14 +407,20 @@ class ReferenceAnalysisService:
                 landmarks = results.multi_face_landmarks[0].landmark
                 blendshapes = self._calculate_blendshapes(landmarks)
                 
+                # 머리 포즈 계산 (3D 좌표 활용)
+                head_pitch, head_yaw, head_roll = self._calculate_head_pose(landmarks)
+                head_rotation = [head_pitch, head_yaw, head_roll]
+                
                 features = VideoFeatures(
                     blendshapes=blendshapes,
                     face_detected=True,
+                    head_rotation=head_rotation,  # 3D 머리 포즈 정보 추가
                 )
             else:
                 features = VideoFeatures(
                     blendshapes=None,
                     face_detected=False,
+                    head_rotation=None,
                 )
 
             video_features.append(features)
@@ -428,10 +434,102 @@ class ReferenceAnalysisService:
         print(f"   👤 비디오 특성 추출 완료: {len(video_features)} 프레임")
         return video_features
 
+    def _calculate_head_pose(self, landmarks) -> tuple[float, float, float]:
+        """
+        3D 랜드마크 좌표를 사용하여 머리 포즈(Pitch, Yaw, Roll) 계산.
+        
+        x, y, z 좌표를 모두 활용하여 입체적인 머리 방향을 추정합니다.
+        
+        Returns:
+            (pitch, yaw, roll): -1.0 ~ 1.0 정규화된 값
+            - pitch: 상하 기울기 (위: +, 아래: -)
+            - yaw: 좌우 회전 (왼쪽: +, 오른쪽: -)
+            - roll: 좌우 기울임 (왼쪽: +, 오른쪽: -)
+        """
+        # 핵심 랜드마크 3D 좌표 추출
+        nose_tip = np.array([
+            landmarks[self.LM["noseTip"]].x,
+            landmarks[self.LM["noseTip"]].y,
+            landmarks[self.LM["noseTip"]].z
+        ])
+        face_top = np.array([
+            landmarks[self.LM["faceTop"]].x,
+            landmarks[self.LM["faceTop"]].y,
+            landmarks[self.LM["faceTop"]].z
+        ])
+        face_bottom = np.array([
+            landmarks[self.LM["faceBottom"]].x,
+            landmarks[self.LM["faceBottom"]].y,
+            landmarks[self.LM["faceBottom"]].z
+        ])
+        face_left = np.array([
+            landmarks[self.LM["faceLeft"]].x,
+            landmarks[self.LM["faceLeft"]].y,
+            landmarks[self.LM["faceLeft"]].z
+        ])
+        face_right = np.array([
+            landmarks[self.LM["faceRight"]].x,
+            landmarks[self.LM["faceRight"]].y,
+            landmarks[self.LM["faceRight"]].z
+        ])
+        
+        # 얼굴 중심 계산
+        face_center = (face_top + face_bottom + face_left + face_right) / 4
+        
+        # Pitch (상하 기울기): 코끝과 얼굴 중심의 z 좌표 차이 활용
+        # z가 작을수록(카메라에 가까울수록) 얼굴이 앞으로 향함
+        vertical_vec = face_top - face_bottom
+        nose_forward = nose_tip[2] - face_center[2]  # z 좌표 차이
+        pitch = np.clip(nose_forward * 10.0, -1.0, 1.0)  # 정규화
+        
+        # Yaw (좌우 회전): 좌우 얼굴 가장자리의 z 좌표 차이
+        # 왼쪽이 카메라에 가까우면(z 작으면) 왼쪽으로 회전
+        yaw_diff = face_right[2] - face_left[2]  # z 좌표 차이
+        yaw = np.clip(yaw_diff * 10.0, -1.0, 1.0)  # 정규화
+        
+        # Roll (좌우 기울임): 좌우 눈의 y 좌표 차이
+        left_eye_y = landmarks[self.LM["leftEyeOuter"]].y
+        right_eye_y = landmarks[self.LM["rightEyeOuter"]].y
+        roll_diff = right_eye_y - left_eye_y  # y 좌표 차이
+        roll = np.clip(roll_diff * 10.0, -1.0, 1.0)  # 정규화
+        
+        return float(pitch), float(yaw), float(roll)
+
+    def _calculate_depth_features(self, landmarks) -> tuple[float, float]:
+        """
+        z 좌표를 활용한 깊이 기반 표정 특성 계산.
+        
+        Returns:
+            (face_push, chin_forward): 0.0 ~ 1.0 정규화된 값
+            - face_push: 얼굴 전방 돌출 정도
+            - chin_forward: 턱 전방 돌출 정도
+        """
+        # 코끝 z 좌표 (기준점)
+        nose_tip_z = landmarks[self.LM["noseTip"]].z
+        
+        # 얼굴 가장자리 z 좌표 평균
+        face_left_z = landmarks[self.LM["faceLeft"]].z
+        face_right_z = landmarks[self.LM["faceRight"]].z
+        face_edge_z = (face_left_z + face_right_z) / 2
+        
+        # face_push: 코끝이 얼굴 가장자리보다 얼마나 앞에 있는지
+        # z가 작을수록 카메라에 가까움 (돌출)
+        face_push_raw = face_edge_z - nose_tip_z
+        face_push = self._clamp(face_push_raw * 5.0)  # 정규화
+        
+        # chin_forward: 턱이 얼마나 앞으로 나왔는지
+        chin_z = landmarks[self.LM["faceBottom"]].z
+        nose_z = landmarks[self.LM["noseTip"]].z
+        chin_forward_raw = nose_z - chin_z  # 턱이 코보다 앞에 있으면 양수
+        chin_forward = self._clamp(chin_forward_raw * 8.0)  # 정규화
+        
+        return float(face_push), float(chin_forward)
+
     def _calculate_blendshapes(self, landmarks) -> Blendshapes:
         """
         MediaPipe 478개 랜드마크에서 ARKit 스타일 블렌드쉐입 계산.
         
+        x, y, z 좌표를 모두 활용하여 입체적인 표정 분석을 수행합니다.
         모든 값은 0.0 ~ 1.0 으로 정규화됩니다.
         """
         def get_point(idx: int) -> np.ndarray:
@@ -440,8 +538,14 @@ class ReferenceAnalysisService:
             return np.array([lm.x, lm.y, lm.z])
 
         def dist(idx1: int, idx2: int) -> float:
-            """두 랜드마크 사이의 유클리드 거리."""
+            """두 랜드마크 사이의 3D 유클리드 거리 (x, y, z 모두 사용)."""
             return float(np.linalg.norm(get_point(idx1) - get_point(idx2)))
+
+        def dist_2d(idx1: int, idx2: int) -> float:
+            """두 랜드마크 사이의 2D 거리 (x, y만 사용)."""
+            p1 = get_point(idx1)[:2]  # x, y만
+            p2 = get_point(idx2)[:2]
+            return float(np.linalg.norm(p1 - p2))
 
         def dist_y(idx1: int, idx2: int) -> float:
             """두 랜드마크 사이의 Y축 거리 (수직)."""
@@ -451,16 +555,23 @@ class ReferenceAnalysisService:
             """두 랜드마크 사이의 X축 거리 (수평)."""
             return abs(landmarks[idx1].x - landmarks[idx2].x)
 
-        # 얼굴 기준 크기 (정규화용)
-        face_width = dist(self.LM["faceLeft"], self.LM["faceRight"])
-        face_height = dist(self.LM["faceTop"], self.LM["faceBottom"])
+        def dist_z(idx1: int, idx2: int) -> float:
+            """두 랜드마크 사이의 Z축 거리 (깊이)."""
+            return abs(landmarks[idx1].z - landmarks[idx2].z)
+
+        # 얼굴 기준 크기 (3D 거리 사용으로 더 정확한 정규화)
+        face_width = dist(self.LM["faceLeft"], self.LM["faceRight"])  # 3D 거리
+        face_height = dist(self.LM["faceTop"], self.LM["faceBottom"])  # 3D 거리
+        
+        # 깊이 정보를 활용한 얼굴 크기 보정 (카메라 거리 보정)
+        face_depth = dist_z(self.LM["noseTip"], self.LM["faceLeft"])
         
         if face_width < 1e-6 or face_height < 1e-6:
             return Blendshapes()  # 기본값 반환
 
-        # 눈 기준 크기
-        left_eye_width = dist(self.LM["leftEyeInner"], self.LM["leftEyeOuter"])
-        right_eye_width = dist(self.LM["rightEyeInner"], self.LM["rightEyeOuter"])
+        # 눈 기준 크기 (3D 거리 사용)
+        left_eye_width = dist(self.LM["leftEyeInner"], self.LM["leftEyeOuter"])  # 3D 거리
+        right_eye_width = dist(self.LM["rightEyeInner"], self.LM["rightEyeOuter"])  # 3D 거리
 
         # =====================================================================
         # 블렌드쉐입 계산 (ARKit 스타일)
@@ -534,44 +645,78 @@ class ReferenceAnalysisService:
             / face_height * 5.0
         )
 
-        # --- 눈 관련 ---
-        left_eye_open = dist_y(self.LM["leftEyeTop"], self.LM["leftEyeBottom"])
-        right_eye_open = dist_y(self.LM["rightEyeTop"], self.LM["rightEyeBottom"])
+        # --- 눈 관련 (3D 거리 활용으로 더 정확한 측정) ---
+        # 눈 열림 정도: 3D 거리 사용 (깊이 포함)
+        left_eye_open = dist(self.LM["leftEyeTop"], self.LM["leftEyeBottom"])  # 3D 거리
+        right_eye_open = dist(self.LM["rightEyeTop"], self.LM["rightEyeBottom"])  # 3D 거리
         
-        # 눈 크게 뜸
-        eye_wide_left = self._clamp(left_eye_open / left_eye_width * 2.0 - 0.3)
-        eye_wide_right = self._clamp(right_eye_open / right_eye_width * 2.0 - 0.3)
+        # 눈꺼풀 깊이 차이도 고려 (z 좌표)
+        left_eye_depth = dist_z(self.LM["leftEyeTop"], self.LM["leftEyeBottom"])
+        right_eye_depth = dist_z(self.LM["rightEyeTop"], self.LM["rightEyeBottom"])
+        
+        # 눈 크게 뜸 (3D 거리 + 깊이 보정)
+        eye_wide_left = self._clamp(
+            (left_eye_open + left_eye_depth * 0.3) / left_eye_width * 2.0 - 0.3
+        )
+        eye_wide_right = self._clamp(
+            (right_eye_open + right_eye_depth * 0.3) / right_eye_width * 2.0 - 0.3
+        )
 
-        # 눈 찡그림 (눈이 가늘어짐)
+        # 눈 찡그림 (눈이 가늘어짐) - 3D 거리 기반
         eye_squint_left = self._clamp(1.0 - left_eye_open / left_eye_width * 3.0)
         eye_squint_right = self._clamp(1.0 - right_eye_open / right_eye_width * 3.0)
 
-        # 눈 감기
+        # 눈 감기 - 3D 거리 기반
         base_eye_open = left_eye_width * 0.25
         eye_blink_left = self._clamp(1.0 - left_eye_open / base_eye_open)
         eye_blink_right = self._clamp(1.0 - right_eye_open / base_eye_open)
 
-        # --- 볼/코 관련 ---
-        # 볼 부풀리기 (볼이 바깥으로 나감)
-        left_cheek_x = landmarks[self.LM["leftCheek"]].x
-        right_cheek_x = landmarks[self.LM["rightCheek"]].x
-        face_left_x = landmarks[self.LM["faceLeft"]].x
-        face_right_x = landmarks[self.LM["faceRight"]].x
+        # --- 볼/코 관련 (3D 좌표 활용) ---
+        # 볼 부풀리기: x 좌표뿐만 아니라 z 좌표(깊이)도 고려
+        # 볼을 부풀리면 볼이 앞으로 나오므로 z 좌표가 감소함
+        left_cheek = get_point(self.LM["leftCheek"])
+        right_cheek = get_point(self.LM["rightCheek"])
+        face_left = get_point(self.LM["faceLeft"])
+        face_right = get_point(self.LM["faceRight"])
+        nose_tip = get_point(self.LM["noseTip"])
+        
+        # x축 기반 볼 팽창
+        cheek_x_expansion = (
+            (face_left[0] - left_cheek[0]) + (right_cheek[0] - face_right[0])
+        ) / face_width
+        
+        # z축 기반 볼 돌출 (볼이 코끝보다 앞으로 나오면 부풀림)
+        left_cheek_z_diff = nose_tip[2] - left_cheek[2]  # 양수면 볼이 앞으로 나옴
+        right_cheek_z_diff = nose_tip[2] - right_cheek[2]
+        cheek_z_puff = (left_cheek_z_diff + right_cheek_z_diff) * 5.0
         
         cheek_puff = self._clamp(
-            ((face_left_x - left_cheek_x) + (right_cheek_x - face_right_x)) 
-            / face_width * 5.0
+            cheek_x_expansion * 3.0 + cheek_z_puff * 2.0
         )
 
-        # 코 찡그림
+        # 코 찡그림 (3D 거리 활용으로 더 정확한 측정)
+        nose_left_3d = get_point(self.LM["noseLeft"])
+        nose_right_3d = get_point(self.LM["noseRight"])
+        nose_tip_3d = get_point(self.LM["noseTip"])
+        
         nose_sneer_left = self._clamp(
-            (landmarks[self.LM["noseLeft"]].y - landmarks[self.LM["noseTip"]].y)
+            (nose_left_3d[1] - nose_tip_3d[1] + (nose_left_3d[2] - nose_tip_3d[2]) * 0.5)
             / face_height * 10.0
         )
         nose_sneer_right = self._clamp(
-            (landmarks[self.LM["noseRight"]].y - landmarks[self.LM["noseTip"]].y)
+            (nose_right_3d[1] - nose_tip_3d[1] + (nose_right_3d[2] - nose_tip_3d[2]) * 0.5)
             / face_height * 10.0
         )
+
+        # =====================================================================
+        # 3D 좌표 기반 추가 특성 계산
+        # =====================================================================
+        
+        # 머리 포즈 (Pitch, Yaw, Roll)
+        head_pitch, head_yaw, head_roll = self._calculate_head_pose(landmarks)
+        
+        # 깊이 기반 표정 특성
+        face_push, chin_forward = self._calculate_depth_features(landmarks)
 
         return Blendshapes(
             jawOpen=jaw_open,
@@ -596,6 +741,12 @@ class ReferenceAnalysisService:
             cheekPuff=cheek_puff,
             noseSneerLeft=nose_sneer_left,
             noseSneerRight=nose_sneer_right,
+            # 3D 좌표 기반 추가 특성
+            headPitch=head_pitch,
+            headYaw=head_yaw,
+            headRoll=head_roll,
+            facePush=face_push,
+            chinForward=chin_forward,
         )
 
     @staticmethod

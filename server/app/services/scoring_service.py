@@ -101,8 +101,13 @@ class ScoringService:
     # 유사도/상관계수를 더 엄격하게 변환하는 지수 (1.0보다 클수록 엄격)
     SIMILARITY_POWER = 1.35
     CORRELATION_POWER = 1.40
+    EXPRESSION_SIMILARITY_POWER = 1.60   # 표정 전용 (배우와 더 까다롭게 비교)
     # 레인지 비율이 1에서 벗어날 때 페널티 크기 (클수록 엄격)
-    RANGE_PENALTY_MULT = 140.0
+    RANGE_PENALTY_MULT = 140.0      # 피치용
+    ENERGY_RANGE_PENALTY_MULT = 50.0  # 인텐시티용 (낮은 패널티로 완화)
+
+    # 표정 강도(Intensity) 스코어 곡선 (1.0=선형, <1=완화, >1=엄격)
+    EXPRESSION_INTENSITY_POWER = 1.0
 
     # =========================================================================
     # 블렌드쉐입 그룹 정의 (얼굴 영역별)
@@ -158,6 +163,12 @@ class ScoringService:
         "cheekPuff": 0.8,
         "noseSneerLeft": 0.9,
         "noseSneerRight": 0.9,
+        # 3D 좌표 기반 (머리 포즈 및 깊이)
+        "headPitch": 1.0,      # 머리 상하 기울기 (고개 끄덕임)
+        "headYaw": 1.0,        # 머리 좌우 회전 (고개 젓기)
+        "headRoll": 0.8,       # 머리 좌우 기울임 (갸웃)
+        "facePush": 0.6,       # 얼굴 전방 돌출
+        "chinForward": 0.7,    # 턱 전방 돌출
     }
 
     def __init__(
@@ -431,11 +442,11 @@ class ScoringService:
         user_range = float(np.max(user_arr) - np.min(user_arr))
         ref_range = float(np.max(ref_arr) - np.min(ref_arr))
         
-        # 배우 대비 사용자의 다이내믹 레인지 비율
+        # 배우 대비 사용자의 다이내믹 레인지 비율 (인텐시티는 패널티 완화)
         if ref_range > 1e-8:
             intensity_ratio = user_range / ref_range
             deviation = abs(1.0 - intensity_ratio)
-            intensity_score = max(0.0, 100.0 - deviation * self.RANGE_PENALTY_MULT)
+            intensity_score = max(0.0, 100.0 - deviation * self.ENERGY_RANGE_PENALTY_MULT)
         else:
             intensity_ratio = 1.0
             intensity_score = 100.0
@@ -537,10 +548,19 @@ class ScoringService:
             user_bs = user_frame.video.blendshapes.model_dump()
             ref_bs = ref_frame.video.blendshapes.model_dump()
 
-            # 영역별 유사도 계산
-            eye_sim = self._calculate_zone_similarity(user_bs, ref_bs, self.EYE_BLENDSHAPES)
-            mouth_sim = self._calculate_zone_similarity(user_bs, ref_bs, self.MOUTH_BLENDSHAPES)
-            brow_sim = self._calculate_zone_similarity(user_bs, ref_bs, self.BROW_BLENDSHAPES)
+            # 영역별 유사도 계산 (표정은 EXPRESSION_SIMILARITY_POWER로 더 엄격하게)
+            eye_sim = self._calculate_zone_similarity(
+                user_bs, ref_bs, self.EYE_BLENDSHAPES,
+                similarity_power=self.EXPRESSION_SIMILARITY_POWER,
+            )
+            mouth_sim = self._calculate_zone_similarity(
+                user_bs, ref_bs, self.MOUTH_BLENDSHAPES,
+                similarity_power=self.EXPRESSION_SIMILARITY_POWER,
+            )
+            brow_sim = self._calculate_zone_similarity(
+                user_bs, ref_bs, self.BROW_BLENDSHAPES,
+                similarity_power=self.EXPRESSION_SIMILARITY_POWER,
+            )
 
             eye_scores.append(eye_sim)
             mouth_scores.append(mouth_sim)
@@ -634,8 +654,19 @@ class ScoringService:
         user_bs: dict,
         ref_bs: dict,
         zone_keys: list[str],
+        similarity_power: float | None = None,
     ) -> float:
-        """특정 얼굴 영역의 블렌드쉐입 유사도 계산."""
+        """특정 얼굴 영역의 블렌드쉐입 유사도 계산 (Intensity-Aware Scoring).
+        
+        - Direction Score: 코사인 유사도 (표정 "타입"이 맞는지)
+        - Intensity Score: L2 Norm 비율 (표정 "강도"가 맞는지)
+        - Final = Direction * Intensity (약한 표정은 감점)
+        
+        Args:
+            similarity_power: 엄격도 지수 (None이면 SIMILARITY_POWER 사용).
+        """
+        EPSILON = 1e-6
+        
         user_values = []
         ref_values = []
         
@@ -643,7 +674,6 @@ class ScoringService:
             user_val = user_bs.get(key, 0.0)
             ref_val = ref_bs.get(key, 0.0)
             if user_val is not None and ref_val is not None:
-                # 가중치 적용
                 weight = self.BLENDSHAPE_WEIGHTS.get(key, 1.0)
                 user_values.append(float(user_val) * weight)
                 ref_values.append(float(ref_val) * weight)
@@ -654,8 +684,26 @@ class ScoringService:
         user_arr = np.array(user_values)
         ref_arr = np.array(ref_values)
         
-        similarity = self._cosine_similarity(user_arr, ref_arr)
-        return self._similarity_to_unit(similarity)
+        # 1. Direction Score: 코사인 유사도 (표정 형태)
+        direction_similarity = self._cosine_similarity(user_arr, ref_arr)
+        power = similarity_power if similarity_power is not None else self.SIMILARITY_POWER
+        direction_score = self._similarity_to_unit(direction_similarity, power=power)
+        
+        # 2. Intensity Score: L2 Norm 비율 (표정 강도)
+        user_mag = float(np.linalg.norm(user_arr))
+        ref_mag = float(np.linalg.norm(ref_arr))
+        
+        if user_mag < EPSILON and ref_mag < EPSILON:
+            intensity_score = 1.0  # 둘 다 중립(거의 0) → 만점
+        else:
+            min_mag = min(user_mag, ref_mag)
+            max_mag = max(user_mag, ref_mag)
+            intensity_ratio = min_mag / (max_mag + EPSILON)
+            intensity_score = intensity_ratio ** self.EXPRESSION_INTENSITY_POWER
+        
+        # 3. Final = Direction * Intensity
+        final_score = direction_score * intensity_score
+        return max(0.0, min(1.0, final_score))
 
     # =========================================================================
     # 유틸리티 함수
@@ -712,10 +760,11 @@ class ScoringService:
         return (similarity + 1) / 2
 
     @classmethod
-    def _similarity_to_unit(cls, similarity: float) -> float:
+    def _similarity_to_unit(cls, similarity: float, power: float | None = None) -> float:
         """유사도를 더 엄격하게 0~1로 변환."""
         similarity = max(0.0, min(1.0, similarity))
-        return similarity ** cls.SIMILARITY_POWER
+        p = power if power is not None else cls.SIMILARITY_POWER
+        return similarity ** p
 
     @classmethod
     def _similarity_to_score(cls, similarity: float) -> float:
@@ -870,10 +919,6 @@ class ScoringService:
         scores = {"눈": eye_score, "입": mouth_score, "눈썹": brow_score}
         weakest = min(scores, key=scores.get)
         weakest_score = scores[weakest]
-        
-        # 높은 영역 찾기
-        strongest = max(scores, key=scores.get)
-        strongest_score = scores[strongest]
         
         # 특정 조합에 대한 스마트 피드백
         if weakest == "눈" and weakest_score < 70:
