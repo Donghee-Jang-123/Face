@@ -111,8 +111,10 @@ export default function Home() {
 
   // 스트림이 변경되면 비디오 엘리먼트에 연결 (모드 전환 시 video 엘리먼트가 바뀌므로 authMode 포함)
   useEffect(() => {
-    if (videoRef.current && stream) {
+    if (videoRef.current && stream && !capturedImage) {
       videoRef.current.srcObject = stream;
+      // ?? ?????? ??? ? ??
+      videoRef.current.play().catch(() => {});
     }
   }, [stream, authMode]);
 

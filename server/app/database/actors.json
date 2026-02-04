@@ -1,5 +1,11 @@
 [
   {
+    "actor_id": "actor_22",
+    "name": "강하늘",
+    "thumbnail": "/assets/actors/강하늘.png",
+    "description": "따뜻한 눈빛과 안정적인 감정 연기"
+  },
+  {
     "actor_id": "actor_04",
     "name": "고윤정",
     "thumbnail": "/assets/actors/고윤정.png",
@@ -12,10 +18,22 @@
     "description": "자연스러운 생활 연기와 깊은 감성"
   },
   {
+    "actor_id": "actor_23",
+    "name": "김영광",
+    "thumbnail": "/assets/actors/김영광.png",
+    "description": "세련된 분위기와 부드러운 카리스마"
+  },
+  {
     "actor_id": "actor_09",
     "name": "김우빈",
     "thumbnail": "/assets/actors/김우빈.png",
     "description": "강렬한 눈빛과 묵직한 카리스마"
+  },
+  {
+    "actor_id": "actor_20",
+    "name": "김유정",
+    "thumbnail": "/assets/actors/김유정.png",
+    "description": "맑고 사랑스러운 이미지와 섬세한 감정 표현"
   },
   {
     "actor_id": "actor_06",
@@ -40,6 +58,12 @@
     "name": "마동석",
     "thumbnail": "/assets/actors/마동석.png",
     "description": "강한 존재감과 파워풀한 액션 연기"
+  },
+  {
+    "actor_id": "actor_24",
+    "name": "박보영",
+    "thumbnail": "/assets/actors/박보영.png",
+    "description": "밝고 사랑스러운 에너지와 자연스러운 연기"
   },
   {
     "actor_id": "actor_12",
@@ -72,10 +96,46 @@
     "description": "우아함 속에 감춰진 단단한 내면 연기"
   },
   {
+    "actor_id": "actor_25",
+    "name": "안재홍",
+    "thumbnail": "/assets/actors/안재홍.png",
+    "description": "생활감 있는 표현과 진솔한 감정선"
+  },
+  {
     "actor_id": "actor_03",
     "name": "유아인",
     "thumbnail": "/assets/actors/유아인.png",
     "description": "독보적인 개성과 폭발적인 감정 스펙트럼"
+  },
+  {
+    "actor_id": "actor_26",
+    "name": "유연석",
+    "thumbnail": "/assets/actors/유연석.png",
+    "description": "부드러운 인상과 섬세한 감정 표현"
+  },
+  {
+    "actor_id": "actor_27",
+    "name": "유지태",
+    "thumbnail": "/assets/actors/유지태.png",
+    "description": "묵직한 분위기와 깊은 카리스마"
+  },
+  {
+    "actor_id": "actor_28",
+    "name": "유해진",
+    "thumbnail": "/assets/actors/유해진.png",
+    "description": "탄탄한 연기력과 친근한 매력"
+  },
+  {
+    "actor_id": "actor_29",
+    "name": "이도현",
+    "thumbnail": "/assets/actors/이도현.png",
+    "description": "맑은 이미지와 섬세한 감정선"
+  },
+  {
+    "actor_id": "actor_30",
+    "name": "이민호",
+    "thumbnail": "/assets/actors/이민호.png",
+    "description": "또렷한 이목구비와 스타성 있는 분위기"
   },
   {
     "actor_id": "actor_16",
@@ -90,10 +150,40 @@
     "description": "절제된 카리스마와 긴장감"
   },
   {
+    "actor_id": "actor_31",
+    "name": "임지연",
+    "thumbnail": "/assets/actors/임지연.png",
+    "description": "강렬한 존재감과 다층적인 감정 표현"
+  },
+  {
+    "actor_id": "actor_32",
+    "name": "장동희",
+    "thumbnail": "/assets/actors/장동희.png",
+    "description": "실험용 캐릭터, 임의로 설정된 프로필"
+  },
+  {
+    "actor_id": "actor_33",
+    "name": "조이현",
+    "thumbnail": "/assets/actors/조이현.png",
+    "description": "청순한 분위기와 안정적인 연기 톤"
+  },
+  {
     "actor_id": "actor_18",
     "name": "주지훈",
     "thumbnail": "/assets/actors/주지훈.png",
     "description": "다크한 분위기와 강한 존재감"
+  },
+  {
+    "actor_id": "actor_34",
+    "name": "천우희",
+    "thumbnail": "/assets/actors/천우희.png",
+    "description": "깊이 있는 눈빛과 섬세한 표현력"
+  },
+  {
+    "actor_id": "actor_35",
+    "name": "최우식",
+    "thumbnail": "/assets/actors/최우식.png",
+    "description": "자연스러운 감정 연기와 편안한 분위기"
   },
   {
     "actor_id": "actor_01",
