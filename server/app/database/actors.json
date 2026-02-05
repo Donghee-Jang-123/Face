@@ -18,6 +18,18 @@
     "description": "자연스러운 생활 연기와 깊은 감성"
   },
   {
+    "actor_id": "actor_36",
+    "name": "김민정",
+    "thumbnail": "/assets/actors/김민정.png",
+    "description": "세련된 분위기와 카리스마 있는 감정 연기"
+  },
+  {
+    "actor_id": "actor_37",
+    "name": "김소현",
+    "thumbnail": "/assets/actors/김소현.png",
+    "description": "맑은 이미지와 안정적인 감정 표현"
+  },
+  {
     "actor_id": "actor_23",
     "name": "김영광",
     "thumbnail": "/assets/actors/김영광.png",
@@ -64,6 +76,12 @@
     "name": "박보영",
     "thumbnail": "/assets/actors/박보영.png",
     "description": "밝고 사랑스러운 에너지와 자연스러운 연기"
+  },
+  {
+    "actor_id": "actor_38",
+    "name": "박소담",
+    "thumbnail": "/assets/actors/박소담.png",
+    "description": "개성 있는 톤과 몰입감 있는 연기"
   },
   {
     "actor_id": "actor_12",
@@ -154,12 +172,6 @@
     "name": "임지연",
     "thumbnail": "/assets/actors/임지연.png",
     "description": "강렬한 존재감과 다층적인 감정 표현"
-  },
-  {
-    "actor_id": "actor_32",
-    "name": "장동희",
-    "thumbnail": "/assets/actors/장동희.png",
-    "description": "실험용 캐릭터, 임의로 설정된 프로필"
   },
   {
     "actor_id": "actor_33",
