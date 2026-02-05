@@ -465,7 +465,7 @@ export default function Home() {
               />
             </>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-gray-900 to-purple-950" />
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-gray-900 to-purple-950" />
           )}
         </div>
         

@@ -464,5 +464,463 @@
         ]
       }
     ]
+  },
+  {
+    "video_id": "v_007",
+    "actor_id": "공유",
+    "title": "도깨비",
+    "video_url": "/assets/videos/날이좋아서.mp4",
+    "sentences": [
+      {
+        "text": "날이 좋아서",
+        "start": 1.06,
+        "end": 1.86,
+        "words": [
+          {
+            "text": "날이",
+            "start": 1.06,
+            "end": 1.36
+          },
+          {
+            "text": "좋아서",
+            "start": 1.36,
+            "end": 1.86
+          }
+        ]
+      },
+      {
+        "text": "날이 좋지 않아서",
+        "start": 1.86,
+        "end": 7.09,
+        "words": [
+          {
+            "text": "날이",
+            "start": 1.86,
+            "end": 2.64
+          },
+          {
+            "text": "좋지",
+            "start": 5.58,
+            "end": 6.34
+          },
+          {
+            "text": "않아서",
+            "start": 6.34,
+            "end": 7.09
+          }
+        ]
+      },
+      {
+        "text": "날이 적당해서",
+        "start": 10.23,
+        "end": 11.47,
+        "words": [
+          {
+            "text": "날이",
+            "start": 10.23,
+            "end": 10.93
+          },
+          {
+            "text": "적당해서",
+            "start": 10.93,
+            "end": 11.47
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_008",
+    "actor_id": "이영애",
+    "title": "친절한 금자씨",
+    "video_url": "/assets/videos/너나잘하세요.mp4",
+    "sentences": [
+      {
+        "text": "너나 잘하세요",
+        "start": 2.91,
+        "end": 3.89,
+        "words": [
+          {
+            "text": "너나",
+            "start": 2.91,
+            "end": 3.23
+          },
+          {
+            "text": "잘하세요",
+            "start": 3.23,
+            "end": 3.89
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_009",
+    "actor_id": "강하늘",
+    "title": "상속자들",
+    "video_url": "/assets/videos/사탄들의학교에.mp4",
+    "sentences": [
+      {
+        "text": "사탄들의 학교에",
+        "start": 1.21,
+        "end": 3.38,
+        "words": [
+          {
+            "text": "사탄들의",
+            "start": 1.21,
+            "end": 2.295
+          },
+          {
+            "text": "학교에",
+            "start": 2.295,
+            "end": 3.38
+          }
+        ]
+      },
+      {
+        "text": "루시퍼의 등장이라",
+        "start": 3.38,
+        "end": 5.55,
+        "words": [
+          {
+            "text": "루시퍼의",
+            "start": 3.38,
+            "end": 4.465
+          },
+          {
+            "text": "등장이라",
+            "start": 4.465,
+            "end": 5.55
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_010",
+    "actor_id": "안재홍",
+    "title": "마스크걸",
+    "video_url": "/assets/videos/아이시떼루.mp4",
+    "sentences": [
+      {
+        "text": "저 보미씨를 사랑합니다",
+        "start": 2.61,
+        "end": 3.83,
+        "words": [
+          {
+            "text": "저",
+            "start": 2.61,
+            "end": 2.73
+          },
+          {
+            "text": "보미씨를",
+            "start": 2.73,
+            "end": 3.27
+          },
+          {
+            "text": "사랑합니다",
+            "start": 3.27,
+            "end": 3.83
+          }
+        ]
+      },
+      {
+        "text": "아이시떼루",
+        "start": 6.09,
+        "end": 7.17,
+        "words": [
+          {
+            "text": "아이시떼루",
+            "start": 6.09,
+            "end": 7.17
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_011",
+    "actor_id": "김지원",
+    "title": "쌈마이웨이",
+    "video_url": "/assets/videos/애라도힘들어.mp4",
+    "sentences": [
+      {
+        "text": "에리도 힘들어 흥",
+        "start": 0.2,
+        "end": 1.94,
+        "words": [
+          {
+            "text": "에리도",
+            "start": 0.2,
+            "end": 0.74
+          },
+          {
+            "text": "힘들어",
+            "start": 0.74,
+            "end": 1.44
+          },
+          {
+            "text": "흥",
+            "start": 1.44,
+            "end": 1.94
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_012",
+    "actor_id": "박은빈",
+    "title": "우영우",
+    "video_url": "/assets/videos/우영우.mp4",
+    "sentences": [
+      {
+        "text": "제 이름은 똑바로 읽어도 거꾸로 읽어도 우영우입니다",
+        "start": 0.74,
+        "end": 3.77,
+        "words": [
+          {
+            "text": "제",
+            "start": 0.74,
+            "end": 1.173
+          },
+          {
+            "text": "이름은",
+            "start": 1.173,
+            "end": 1.606
+          },
+          {
+            "text": "똑바로",
+            "start": 1.606,
+            "end": 2.039
+          },
+          {
+            "text": "읽어도",
+            "start": 2.039,
+            "end": 2.471
+          },
+          {
+            "text": "거꾸로",
+            "start": 2.471,
+            "end": 2.904
+          },
+          {
+            "text": "읽어도",
+            "start": 2.904,
+            "end": 3.337
+          },
+          {
+            "text": "우영우입니다",
+            "start": 3.337,
+            "end": 3.77
+          }
+        ]
+      },
+      {
+        "text": "기러기 토마토 스위스 인도인 별똥별 우영우",
+        "start": 3.77,
+        "end": 6.367,
+        "words": [
+          {
+            "text": "기러기",
+            "start": 3.77,
+            "end": 4.203
+          },
+          {
+            "text": "토마토",
+            "start": 4.203,
+            "end": 4.636
+          },
+          {
+            "text": "스위스",
+            "start": 4.636,
+            "end": 5.069
+          },
+          {
+            "text": "인도인",
+            "start": 5.069,
+            "end": 5.501
+          },
+          {
+            "text": "별똥별",
+            "start": 5.501,
+            "end": 5.934
+          },
+          {
+            "text": "우영우",
+            "start": 5.934,
+            "end": 6.367
+          }
+        ]
+      },
+      {
+        "text": "역삼역",
+        "start": 6.367,
+        "end": 6.8,
+        "words": [
+          {
+            "text": "역삼역",
+            "start": 6.367,
+            "end": 6.8
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_013",
+    "actor_id": "황정민",
+    "title": "수리남",
+    "video_url": "/assets/videos/쥐새끼가뻔뻔하게.mp4",
+    "sentences": [
+      {
+        "text": "찍찍찍찍찍",
+        "start": 4.95,
+        "end": 5.495,
+        "words": [
+          {
+            "text": "찍찍찍찍찍",
+            "start": 4.95,
+            "end": 5.495
+          }
+        ]
+      },
+      {
+        "text": "쥐새끼가 뻔뻔하게 시끄럽네",
+        "start": 5.495,
+        "end": 7.13,
+        "words": [
+          {
+            "text": "쥐새끼가",
+            "start": 5.495,
+            "end": 6.04
+          },
+          {
+            "text": "뻔뻔하게",
+            "start": 6.04,
+            "end": 6.585
+          },
+          {
+            "text": "시끄럽네",
+            "start": 6.585,
+            "end": 7.13
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_014",
+    "actor_id": "박해수",
+    "title": "오징어게임",
+    "video_url": "/assets/videos/하씨발기훈이형.mp4",
+    "sentences": [
+      {
+        "text": "하 씨발 기훈이형",
+        "start": 0.8,
+        "end": 3.64,
+        "words": [
+          {
+            "text": "하",
+            "start": 0.8,
+            "end": 0.94
+          },
+          {
+            "text": "씨발",
+            "start": 0.94,
+            "end": 1.7
+          },
+          {
+            "text": "기훈이형",
+            "start": 1.7,
+            "end": 3.64
+          }
+        ]
+      },
+      {
+        "text": "형 인생이 왜 그모양 그꼴인줄 알어?",
+        "start": 3.64,
+        "end": 8.91,
+        "words": [
+          {
+            "text": "형",
+            "start": 3.64,
+            "end": 4.4
+          },
+          {
+            "text": "인생이",
+            "start": 7.25,
+            "end": 7.71
+          },
+          {
+            "text": "왜",
+            "start": 7.71,
+            "end": 7.85
+          },
+          {
+            "text": "그모양",
+            "start": 7.85,
+            "end": 8.21
+          },
+          {
+            "text": "그꼴인줄",
+            "start": 8.21,
+            "end": 8.71
+          },
+          {
+            "text": "알어?",
+            "start": 8.71,
+            "end": 8.91
+          }
+        ]
+      },
+      {
+        "text": "지금 이 상황에도 그런 한심한 질문이나 하고 자빠졌으니까",
+        "start": 10.16,
+        "end": 13.48,
+        "words": [
+          {
+            "text": "지금",
+            "start": 10.16,
+            "end": 10.8
+          },
+          {
+            "text": "이",
+            "start": 10.8,
+            "end": 10.98
+          },
+          {
+            "text": "상황에도",
+            "start": 10.98,
+            "end": 11.36
+          },
+          {
+            "text": "그런",
+            "start": 11.36,
+            "end": 11.56
+          },
+          {
+            "text": "한심한",
+            "start": 11.56,
+            "end": 12.12
+          },
+          {
+            "text": "질문이나",
+            "start": 12.12,
+            "end": 12.58
+          },
+          {
+            "text": "하고",
+            "start": 12.58,
+            "end": 12.72
+          },
+          {
+            "text": "자빠졌으니까",
+            "start": 12.72,
+            "end": 13.48
+          }
+        ]
+      }
+    ]
   }
 ]
