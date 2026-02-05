@@ -3,6 +3,7 @@
     "video_id": "v_001",
     "actor_id": "이정재",
     "title": "관상 - 만남 장면",
+    "genre": "분노",
     "video_url": "/assets/videos/내가왕이될상인가.mp4",
     "sentences": [
       {
@@ -55,6 +56,7 @@
     "video_id": "v_002",
     "actor_id": "김고은",
     "title": "도깨비 - 고백 장면",
+    "genre": "로맨스",
     "video_url": "/assets/videos/사랑해요.mp4",
     "sentences": [
       {
@@ -75,6 +77,7 @@
     "video_id": "v_003",
     "actor_id": "황정민",
     "title": "서울의 봄",
+    "genre": "분노",
     "video_url": "/assets/videos/실패하면반역.mp4",
     "sentences": [
       {
@@ -117,6 +120,7 @@
     "video_id": "v_004",
     "actor_id": "유아인",
     "title": "베테랑",
+    "genre": "코미디",
     "video_url": "/assets/videos/어이가없네.mp4",
     "sentences": [
       {
@@ -148,18 +152,18 @@
       },
       {
         "text": "어이가 없네",
-        "start": 1.79,
-        "end": 5.57,
+        "start": 5.25,
+        "end": 5.7,
         "words": [
           {
             "text": "어이가",
-            "start": 1.79,
-            "end": 2.83
+            "start": 5.25,
+            "end": 5.35
           },
           {
             "text": "없네",
-            "start": 5.17,
-            "end": 5.57
+            "start": 5.35,
+            "end": 5.7
           }
         ]
       }
@@ -169,6 +173,7 @@
     "video_id": "v_005",
     "actor_id": "송강호",
     "title": "변호인",
+    "genre": "분노",
     "video_url": "/assets/videos/압니다너무잘알지요.mp4",
     "sentences": [
       {
@@ -179,11 +184,11 @@
           {
             "text": "압니다",
             "start": 0.88,
-            "end": 1.28
+            "end": 2.3
           },
           {
             "text": "너무",
-            "start": 1.28,
+            "start": 2.3,
             "end": 2.74
           },
           {
@@ -388,6 +393,7 @@
     "video_id": "v_006",
     "actor_id": "박소담",
     "title": "기생충",
+    "genre": "코미디",
     "video_url": "/assets/videos/제시카외동딸.mp4",
     "sentences": [
       {
@@ -469,6 +475,7 @@
     "video_id": "v_007",
     "actor_id": "공유",
     "title": "도깨비",
+    "genre": "로맨스",
     "video_url": "/assets/videos/날이좋아서.mp4",
     "sentences": [
       {
@@ -533,6 +540,7 @@
     "video_id": "v_008",
     "actor_id": "이영애",
     "title": "친절한 금자씨",
+    "genre": "분노",
     "video_url": "/assets/videos/너나잘하세요.mp4",
     "sentences": [
       {
@@ -558,6 +566,7 @@
     "video_id": "v_009",
     "actor_id": "강하늘",
     "title": "상속자들",
+    "genre": "로맨스",
     "video_url": "/assets/videos/사탄들의학교에.mp4",
     "sentences": [
       {
@@ -600,6 +609,7 @@
     "video_id": "v_010",
     "actor_id": "안재홍",
     "title": "마스크걸",
+    "genre": "코미디",
     "video_url": "/assets/videos/아이시떼루.mp4",
     "sentences": [
       {
@@ -642,6 +652,7 @@
     "video_id": "v_011",
     "actor_id": "김지원",
     "title": "쌈마이웨이",
+    "genre": "코미디",
     "video_url": "/assets/videos/애라도힘들어.mp4",
     "sentences": [
       {
@@ -672,6 +683,7 @@
     "video_id": "v_012",
     "actor_id": "박은빈",
     "title": "우영우",
+    "genre": "코미디",
     "video_url": "/assets/videos/우영우.mp4",
     "sentences": [
       {
@@ -771,6 +783,7 @@
     "video_id": "v_013",
     "actor_id": "황정민",
     "title": "수리남",
+    "genre": "분노",
     "video_url": "/assets/videos/쥐새끼가뻔뻔하게.mp4",
     "sentences": [
       {
@@ -813,6 +826,7 @@
     "video_id": "v_014",
     "actor_id": "박해수",
     "title": "오징어게임",
+    "genre": "분노",
     "video_url": "/assets/videos/하씨발기훈이형.mp4",
     "sentences": [
       {
@@ -925,17 +939,640 @@
   },
   {
     "video_id": "v_015",
-    "actor_id": "유연석석",
-    "title": "낭만닥터김사부부",
-    "video_url": "/assets/videos/왜내수술을탓하냐냐.mp4",
+    "actor_id": "유연석",
+    "title": "낭만닥터김사부",
+    "genre": "분노",
+    "video_url": "/assets/videos/왜내수술을탓하냐.mp4",
     "sentences": [
-      {"text": "자꾸 내 수술을 의심하잖아"},
-      {"text": "죽어라 최선을 다해서 수술했는데"},
-      {"text": "최선을 다해서 장경색 잡아냈고"},   
-      {"text": "최선을 다해서 유리 뽑아냈고"},
-      {"text": "중환자실에 자리없는게 내 잘못도 아닌데"},
-      {"text": "술 많이먹은게 내 잘못도 아닌데"},
-      {"text": "왜 내 수술을 탓하는 말입니까 왜!"}
+      {
+        "text": "자꾸 내 수술을 의심하잖아",
+        "start": 14.1,
+        "end": 14.822,
+        "words": [
+          {
+            "text": "자꾸",
+            "start": 14.1,
+            "end": 14.281
+          },
+          {
+            "text": "내",
+            "start": 14.281,
+            "end": 14.461
+          },
+          {
+            "text": "수술을",
+            "start": 14.461,
+            "end": 14.642
+          },
+          {
+            "text": "의심하잖아",
+            "start": 14.642,
+            "end": 14.822
+          }
+        ]
+      },
+      {
+        "text": "죽어라 최선을 다해서 수술했는데",
+        "start": 14.822,
+        "end": 15.545,
+        "words": [
+          {
+            "text": "죽어라",
+            "start": 14.822,
+            "end": 15.003
+          },
+          {
+            "text": "최선을",
+            "start": 15.003,
+            "end": 15.184
+          },
+          {
+            "text": "다해서",
+            "start": 15.184,
+            "end": 15.364
+          },
+          {
+            "text": "수술했는데",
+            "start": 15.364,
+            "end": 15.545
+          }
+        ]
+      },
+      {
+        "text": "최선을 다해서 장경색 잡아냈고",
+        "start": 15.545,
+        "end": 16.267,
+        "words": [
+          {
+            "text": "최선을",
+            "start": 15.545,
+            "end": 15.726
+          },
+          {
+            "text": "다해서",
+            "start": 15.726,
+            "end": 15.906
+          },
+          {
+            "text": "장경색",
+            "start": 15.906,
+            "end": 16.087
+          },
+          {
+            "text": "잡아냈고",
+            "start": 16.087,
+            "end": 16.267
+          }
+        ]
+      },
+      {
+        "text": "최선을 다해서 유리 뽑아냈고",
+        "start": 16.267,
+        "end": 16.99,
+        "words": [
+          {
+            "text": "최선을",
+            "start": 16.267,
+            "end": 16.448
+          },
+          {
+            "text": "다해서",
+            "start": 16.448,
+            "end": 16.629
+          },
+          {
+            "text": "유리",
+            "start": 16.629,
+            "end": 16.809
+          },
+          {
+            "text": "뽑아냈고",
+            "start": 16.809,
+            "end": 16.99
+          }
+        ]
+      },
+      {
+        "text": "중환자실에 자리없는게 내 잘못도 아닌데",
+        "start": 16.99,
+        "end": 17.893,
+        "words": [
+          {
+            "text": "중환자실에",
+            "start": 16.99,
+            "end": 17.171
+          },
+          {
+            "text": "자리없는게",
+            "start": 17.171,
+            "end": 17.351
+          },
+          {
+            "text": "내",
+            "start": 17.351,
+            "end": 17.532
+          },
+          {
+            "text": "잘못도",
+            "start": 17.532,
+            "end": 17.712
+          },
+          {
+            "text": "아닌데",
+            "start": 17.712,
+            "end": 17.893
+          }
+        ]
+      },
+      {
+        "text": "술 많이먹은게 내 잘못도 아닌데",
+        "start": 17.893,
+        "end": 18.796,
+        "words": [
+          {
+            "text": "술",
+            "start": 17.893,
+            "end": 18.074
+          },
+          {
+            "text": "많이먹은게",
+            "start": 18.074,
+            "end": 18.254
+          },
+          {
+            "text": "내",
+            "start": 18.254,
+            "end": 18.435
+          },
+          {
+            "text": "잘못도",
+            "start": 18.435,
+            "end": 18.616
+          },
+          {
+            "text": "아닌데",
+            "start": 18.616,
+            "end": 18.796
+          }
+        ]
+      },
+      {
+        "text": "왜 내 수술을 탓하는 말입니까 왜!",
+        "start": 18.796,
+        "end": 19.88,
+        "words": [
+          {
+            "text": "왜",
+            "start": 18.796,
+            "end": 18.977
+          },
+          {
+            "text": "내",
+            "start": 18.977,
+            "end": 19.158
+          },
+          {
+            "text": "수술을",
+            "start": 19.158,
+            "end": 19.338
+          },
+          {
+            "text": "탓하는",
+            "start": 19.338,
+            "end": 19.519
+          },
+          {
+            "text": "말입니까",
+            "start": 19.519,
+            "end": 19.699
+          },
+          {
+            "text": "왜!",
+            "start": 19.699,
+            "end": 19.88
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_016",
+    "actor_id": "김민정",
+    "title": "미스터선샤인",
+    "genre": "로맨스",
+    "video_url": "/assets/videos/어떤선택을하셨습니까.mp4",
+    "sentences": [
+      {
+        "text": "글로리엔 정보가 많답니다",
+        "start": 1.84,
+        "end": 3.268,
+        "words": [
+          {
+            "text": "글로리엔",
+            "start": 1.84,
+            "end": 2.316
+          },
+          {
+            "text": "정보가",
+            "start": 2.316,
+            "end": 2.792
+          },
+          {
+            "text": "많답니다",
+            "start": 2.792,
+            "end": 3.268
+          }
+        ]
+      },
+      {
+        "text": "저는 호기심이 많구요",
+        "start": 3.268,
+        "end": 4.696,
+        "words": [
+          {
+            "text": "저는",
+            "start": 3.268,
+            "end": 3.744
+          },
+          {
+            "text": "호기심이",
+            "start": 3.744,
+            "end": 4.22
+          },
+          {
+            "text": "많구요",
+            "start": 4.22,
+            "end": 4.696
+          }
+        ]
+      },
+      {
+        "text": "그래서",
+        "start": 4.696,
+        "end": 5.172,
+        "words": [
+          {
+            "text": "그래서",
+            "start": 4.696,
+            "end": 5.172
+          }
+        ]
+      },
+      {
+        "text": "어떤 선택을 하셨습니까?",
+        "start": 5.172,
+        "end": 6.6,
+        "words": [
+          {
+            "text": "어떤",
+            "start": 5.172,
+            "end": 5.648
+          },
+          {
+            "text": "선택을",
+            "start": 5.648,
+            "end": 6.124
+          },
+          {
+            "text": "하셨습니까?",
+            "start": 6.124,
+            "end": 6.6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_017",
+    "actor_id": "김소현",
+    "title": "후아유",
+    "genre": "로맨스",
+    "video_url": "/assets/videos/내동생한테무슨짓했어.mp4",
+    "sentences": [
+      {
+        "text": "이번에는 내가 좀 물어봐야겠다",
+        "start": 0.32,
+        "end": 1.76,
+        "words": [
+          {
+            "text": "이번에는",
+            "start": 0.32,
+            "end": 0.66
+          },
+          {
+            "text": "내가",
+            "start": 0.66,
+            "end": 0.82
+          },
+          {
+            "text": "좀",
+            "start": 0.82,
+            "end": 1.02
+          },
+          {
+            "text": "물어봐야겠다",
+            "start": 1.02,
+            "end": 1.76
+          }
+        ]
+      },
+      {
+        "text": "너",
+        "start": 3.92,
+        "end": 5.23,
+        "words": [
+          {
+            "text": "너",
+            "start": 3.92,
+            "end": 5.23
+          }
+        ]
+      },
+      {
+        "text": "내 동생한테 무슨 짓 했어",
+        "start": 6.92,
+        "end": 10.94,
+        "words": [
+          {
+            "text": "내",
+            "start": 6.92,
+            "end": 7.73
+          },
+          {
+            "text": "동생한테",
+            "start": 9.92,
+            "end": 10.36
+          },
+          {
+            "text": "무슨",
+            "start": 10.36,
+            "end": 10.62
+          },
+          {
+            "text": "짓",
+            "start": 10.62,
+            "end": 10.88
+          },
+          {
+            "text": "했어",
+            "start": 10.88,
+            "end": 10.94
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_018",
+    "actor_id": "천우희",
+    "title": "멜로가체질",
+    "genre": "로맨스",
+    "video_url": "/assets/videos/헤어질거아니면모르지좀마.mp4",
+    "sentences": [
+      {
+        "text": "헤어질 거 아니면",
+        "start": 2.41,
+        "end": 5.327,
+        "words": [
+          {
+            "text": "헤어질",
+            "start": 2.41,
+            "end": 3.382
+          },
+          {
+            "text": "거",
+            "start": 3.382,
+            "end": 4.355
+          },
+          {
+            "text": "아니면",
+            "start": 4.355,
+            "end": 5.327
+          }
+        ]
+      },
+      {
+        "text": "정말 헤어지려고 작정한 거 아니면",
+        "start": 5.327,
+        "end": 10.188,
+        "words": [
+          {
+            "text": "정말",
+            "start": 5.327,
+            "end": 6.299
+          },
+          {
+            "text": "헤어지려고",
+            "start": 6.299,
+            "end": 7.272
+          },
+          {
+            "text": "작정한",
+            "start": 7.272,
+            "end": 8.244
+          },
+          {
+            "text": "거",
+            "start": 8.244,
+            "end": 9.216
+          },
+          {
+            "text": "아니면",
+            "start": 9.216,
+            "end": 10.188
+          }
+        ]
+      },
+      {
+        "text": "좀",
+        "start": 10.188,
+        "end": 11.161,
+        "words": [
+          {
+            "text": "좀",
+            "start": 10.188,
+            "end": 11.161
+          }
+        ]
+      },
+      {
+        "text": "좀 모르지 좀 마.",
+        "start": 11.161,
+        "end": 15.05,
+        "words": [
+          {
+            "text": "좀",
+            "start": 11.161,
+            "end": 12.133
+          },
+          {
+            "text": "모르지",
+            "start": 12.133,
+            "end": 13.105
+          },
+          {
+            "text": "좀",
+            "start": 13.105,
+            "end": 14.078
+          },
+          {
+            "text": "마.",
+            "start": 14.078,
+            "end": 15.05
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_019",
+    "actor_id": "송중기",
+    "title": "태양의후예",
+    "genre": "로맨스",
+    "video_url": "/assets/videos/마음이너무아픕니다.mp4",
+    "sentences": [
+      {
+        "text": "진료 받으러 가봐야겠습니다",
+        "start": 0.32,
+        "end": 1.88,
+        "words": [
+          {
+            "text": "진료",
+            "start": 0.32,
+            "end": 0.68
+          },
+          {
+            "text": "받으러",
+            "start": 0.68,
+            "end": 1.06
+          },
+          {
+            "text": "가봐야겠습니다",
+            "start": 1.06,
+            "end": 1.88
+          }
+        ]
+      },
+      {
+        "text": "막 마음이 막",
+        "start": 1.88,
+        "end": 3.36,
+        "words": [
+          {
+            "text": "막",
+            "start": 1.88,
+            "end": 2.4
+          },
+          {
+            "text": "마음이",
+            "start": 2.4,
+            "end": 3.06
+          },
+          {
+            "text": "막",
+            "start": 3.06,
+            "end": 3.36
+          }
+        ]
+      },
+      {
+        "text": "너무 아픕니다",
+        "start": 3.36,
+        "end": 5.38,
+        "words": [
+          {
+            "text": "너무",
+            "start": 3.36,
+            "end": 4.8
+          },
+          {
+            "text": "아픕니다",
+            "start": 4.8,
+            "end": 5.38
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "video_id": "v_020",
+    "actor_id": "김히어라",
+    "title": "더글로리",
+    "video_url": "/assets/videos/최혜정정신차려.mp4",
+    "sentences": [
+      {
+        "text": "최혜정",
+        "start": 4.58,
+        "end": 5.342,
+        "words": [
+          {
+            "text": "최혜정",
+            "start": 4.58,
+            "end": 5.342
+          }
+        ]
+      },
+      {
+        "text": "정신차려어",
+        "start": 5.342,
+        "end": 6.104,
+        "words": [
+          {
+            "text": "정신차려어",
+            "start": 5.342,
+            "end": 6.104
+          }
+        ]
+      },
+      {
+        "text": "너 그때 문동은 아니였음 너였어",
+        "start": 6.104,
+        "end": 9.916,
+        "words": [
+          {
+            "text": "너",
+            "start": 6.104,
+            "end": 6.867
+          },
+          {
+            "text": "그때",
+            "start": 6.867,
+            "end": 7.629
+          },
+          {
+            "text": "문동은",
+            "start": 7.629,
+            "end": 8.391
+          },
+          {
+            "text": "아니였음",
+            "start": 8.391,
+            "end": 9.153
+          },
+          {
+            "text": "너였어",
+            "start": 9.153,
+            "end": 9.916
+          }
+        ]
+      },
+      {
+        "text": "네가 지져졌다고",
+        "start": 9.916,
+        "end": 11.44,
+        "words": [
+          {
+            "text": "네가",
+            "start": 9.916,
+            "end": 10.678
+          },
+          {
+            "text": "지져졌다고",
+            "start": 10.678,
+            "end": 11.44
+          }
+        ]
+      }
     ]
   }
 ]

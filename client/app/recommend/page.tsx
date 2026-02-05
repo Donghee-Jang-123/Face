@@ -23,11 +23,14 @@ interface Sentence {
   words: WordTimestamp[];
 }
 
+type GenreType = '로맨스' | '코미디' | '분노';
+
 interface Video {
   video_id: string;
   actor_id: string;
   title: string;
   video_url: string;
+  genre?: GenreType;
   thumbnail?: string;
   script?: string;  // 영상별 대사
   sentences?: Sentence[];  // 문장 단위 + 단어별 타임스탬프
@@ -80,7 +83,8 @@ export default function RecommendPage() {
   const [recommendedActor, setRecommendedActor] = useState<Actor | null>(null);
   const [myActorVideos, setMyActorVideos] = useState<Video[]>([]);
   const [allVideos, setAllVideos] = useState<Video[]>([]);
-  const [matchRate, setMatchRate] = useState(0); 
+  const [matchRate, setMatchRate] = useState(0);
+  const [selectedGenre, setSelectedGenre] = useState<GenreType | null>(null); 
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -140,7 +144,7 @@ export default function RecommendPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-gray-900 to-purple-950 flex items-center justify-center text-white">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mr-3"></div>
         분석 결과를 불러오는 중...
       </div>
@@ -148,7 +152,7 @@ export default function RecommendPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0f0f0f] text-white p-6 pb-20 overflow-y-auto">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-950 via-gray-900 to-purple-950 text-white p-6 pb-20 overflow-y-auto">
       
       {/* ──────────────────────────────────────────────
           상단 섹션: (좌) 배우 카드 + (우) 추천 명장면
@@ -241,8 +245,40 @@ export default function RecommendPage() {
           <span>🎬</span> 모든 연기 영상 탐색
         </h3>
 
+        {/* 장르 필터 버튼 */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            type="button"
+            onClick={() => setSelectedGenre(null)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              selectedGenre === null
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            전체
+          </button>
+          {(['로맨스', '코미디', '분노'] as const).map((genre) => (
+            <button
+              key={genre}
+              type="button"
+              onClick={() => setSelectedGenre(genre)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedGenre === genre
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {genre}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
-          {allVideos.map((video) => (
+          {(selectedGenre
+            ? allVideos.filter((v) => v.genre === selectedGenre)
+            : allVideos
+          ).map((video) => (
             <div 
               key={video.video_id} 
               onClick={() => handleSelectVideo(video)}
@@ -268,8 +304,13 @@ export default function RecommendPage() {
                   <h4 className="text-white font-semibold text-sm leading-tight mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors">
                     {video.title}
                   </h4>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-gray-400 text-xs flex items-center gap-2">
                     {video.actor_id}
+                    {video.genre && (
+                      <span className="px-1.5 py-0.5 rounded bg-gray-600 text-gray-300 text-[10px]">
+                        {video.genre}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
